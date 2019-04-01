@@ -1,23 +1,20 @@
-import React from 'react';
+import React, { Component} from 'react';
 import { StyleSheet, Text, View, AppRegistry } from 'react-native';
-import Login from './src/Components/Login/Login';
+import AppContainer from './Navigation';
 
-
-export default class App extends React.Component {
-  render() {
-    return (
-        <Login />
-    );
-  }
+export default class App extends Component {
+    render() {
+        return (
+            <AppContainer />
+        );
+    }
 }
 
 const styles = StyleSheet.create({
-  container: {
+    container: {
     flex: 1,
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
-  },
+    },
 });
-
-AppRegistry.registerComponent("app",() => App);
