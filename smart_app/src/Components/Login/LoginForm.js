@@ -1,10 +1,11 @@
 import React, { Component} from 'react';
 import { View, Text, TextInput, TouchableOpacity,StyleSheet} from 'react-native';
+import { createStackNavigator } from 'react-navigation';
 
 export default class LoginForm extends Component {
 
     render() {
-
+        const { navigate } = this.props.navigation;
         return (
             <View style={styles.container}>
                 <TextInput style = {styles.input}
@@ -24,10 +25,12 @@ export default class LoginForm extends Component {
                            secureTextEntry/>
 
                 <TouchableOpacity style={styles.buttonContainer}>
-                    <Text  style={styles.buttonText}>LOGIN</Text>
+                    <Text style={styles.buttonText}>LOGIN</Text>
                 </TouchableOpacity>
 
-                <Text style={styles.registerText}>No account yet? Register here you slut!</Text>
+                <Text style={styles.registerText} onPress={() => navigate('RegisterScreen')}>
+                    No account yet? Register here you slut!
+                </Text>
             </View>
         );
     }
