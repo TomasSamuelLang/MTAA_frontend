@@ -3,6 +3,14 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingVi
 import { registerUser } from "../RestAPI/ApiCalls";
 
 export default class Register extends Component{
+    constructor(props){
+        super(props);
+        this.state = {
+            login: '',
+            password: '',
+            passwordverification: '',
+        }
+    }
 
     render() {
         const { navigate } = this.props.navigation;
@@ -19,23 +27,35 @@ export default class Register extends Component{
                                keyboardType='default'
                                returnKeyType="next"
                                placeholder='Username'
-                               placeholderTextColor='#0F0F0F'/>
+                               placeholderTextColor='#0F0F0F'
+                               onChangeText={(text) => this.setState({login: text})}
+                    />
 
                     <TextInput style = {styles.input}
                                returnKeyType="next"
                                ref={(input)=> this.passwordInput = input}
                                placeholder='Password'
                                placeholderTextColor='#0f0f0f'
-                               secureTextEntry/>
+                               secureTextEntry
+                               onChangeText={(text) => this.setState({password: text})}
+                    />
 
                     <TextInput style = {styles.input}
                                returnKeyType="go"
                                placeholder='Password Verification'
                                placeholderTextColor='#0f0f0f'
-                               secureTextEntry/>
+                               secureTextEntry
+                               onChangeText={(text) => this.setState({passwordverification: text})}
+                    />
 
                     <TouchableOpacity onPress={() => {
-                        registerUser().then(() => navigate('LoginScreen'))
+                        console.log(this.state.login);
+                        if(this.state.password == this.state.passwordverification) {
+                            registerUser(this.state.login, this.state.password).then(() => navigate('LoginScreen'))
+                        }
+                        else{
+                            console.log("Passwords are different")
+                        }
                     }} style={styles.buttonContainer}>
                         <Text style={styles.buttonText}>REGISTER</Text>
                     </TouchableOpacity>

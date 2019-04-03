@@ -3,6 +3,10 @@ import { StyleSheet, Text, View, AppRegistry } from 'react-native';
 import AppContainer from './Navigation';
 
 export default class App extends Component {
+    constructor(props){
+        super(props);
+    }
+
     render() {
         return (
             <AppContainer />

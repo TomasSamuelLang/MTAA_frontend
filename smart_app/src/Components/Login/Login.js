@@ -1,8 +1,15 @@
 import React, { Component} from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Image} from 'react-native';
-import {loginUser} from "../RestAPI/ApiCalls";
+import {loginUser, registerUser} from "../RestAPI/ApiCalls";
 
 export default class Login extends Component{
+    constructor(props){
+        super(props);
+        this.state = {
+            login: '',
+            password: ''
+        }
+    }
 
     render() {
         const { navigate } = this.props.navigation;
@@ -20,21 +27,27 @@ export default class Login extends Component{
                                keyboardType='default'
                                returnKeyType="next"
                                placeholder='Username'
-                               placeholderTextColor='#0F0F0F'/>
+                               placeholderTextColor='#0F0F0F'
+                               onChangeText={(text) => this.setState({login: text})}
+                    />
 
                     <TextInput style = {styles.input}
                                returnKeyType="go"
                                ref={(input)=> this.passwordInput = input}
                                placeholder='Password'
                                placeholderTextColor='#0f0f0f'
-                               secureTextEntry/>
+                               secureTextEntry
+                               onChangeText={(text) => this.setState({password: text})}
+                    />
 
-                    <TouchableOpacity style={styles.buttonContainer}>
+                    <TouchableOpacity onPress={() => {
+                        console.log(this.state.login);
+                            loginUser(this.state.login, this.state.password).then(() => navigate('HomeScreen'))
+                    }} style={styles.buttonContainer}>
                         <Text style={styles.buttonText}>LOGIN</Text>
                     </TouchableOpacity>
 
-                    <Text onPress={() => {
-                        loginUser().then(() => navigate('LoginScreen'))}}
+                    <Text onPress={() => navigate('RegisterScreen')}
                           style={styles.registerText}>No account yet? Register here you slut!
                     </Text>
                 </View>
