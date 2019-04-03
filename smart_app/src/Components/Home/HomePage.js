@@ -1,41 +1,107 @@
 import React, { Component} from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Image} from 'react-native';
 import DropdownMenu from 'react-native-dropdown-menu';
+import {loginUser} from "../RestAPI/ApiCalls";
+import { Permissions, ImagePicker } from 'expo';
+import { addParkingLot } from "../RestAPI/ApiCalls";
+import getPermission from '../../utils/permissions'
+import { TabContainer } from "../../../Navigation";
 
-export default class Login extends Component {
+export default class HomePage extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            text: ''
+            name: '',
+            address: '',
+            capacity: '',
+            town: '',
+            image: ''
         };
     }
 
+    handleChoosePhoto = async () => {
+        const status = await getPermission(Permissions.CAMERA_ROLL);
+        if (status) {
+            const result = await ImagePicker.launchImageLibraryAsync({
+                allowsEditing: false,
+            });
+
+            if(!result.cancelled) {
+                this.setState({image: result.uri});
+            }
+        }
+    };
+
+    submitParking = async () => {
+      //let result = getTownId(this.state.town);
+       // alert(result);
+        addParkingLot(this.state.name, this.state.address, this.state.capacity, this.state.town);
+    };
+
     render() {
-        let data = [["My favourite", "Add/delete parking", "My account", "About us"]];
+        let data = [["Home", "My favourite", "Add parking", "Delete parking" , "My account", "About us"]];
         const {navigate} = this.props.navigation;
         return (
             <KeyboardAvoidingView behavior="padding" style={styles.container}>
-                <View style={{flex: 1}}>
-                    <View style={{height: 64}} />
-                    <DropdownMenu
-                        style={{flex: 1}}
-                        bgColor={'white'}
-                        tintColor={'#666666'}
-                        activityTintColor={'green'}
-                        // arrowImg={}
-                        // checkImage={}
-                        // optionTextStyle={{color: '#333333'}}
-                        // titleStyle={{color: '#333333'}}
-                        // maxHeight={300}
-                        handler={(selection, row) => this.setState({text: data[selection][row]})}
-                        data={data}
-                    >
 
-                    </DropdownMenu>
-                </View>
+
+
                 <View style={styles.homeContainer}>
+
                     <Image resizeMode="contain" style={styles.logo} source={require('../Images/logo.png')} />
                 </View>
+
+                <TouchableOpacity onPress={() => navigate('AddParkingScreen')
+                } style={styles.buttonContainer}>
+                    <Text style={styles.buttonText}>Show Parking Lots</Text>
+                </TouchableOpacity>
+
+                <TextInput style = {styles.input}
+                           autoCapitalize="none"
+                           autoCorrect={false}
+                           keyboardType='default'
+                           returnKeyType="next"
+                           placeholder='Parking lot name'
+                           placeholderTextColor='#0F0F0F'
+                           onChangeText={(text) => this.setState({name: text})}
+                />
+                <TextInput style = {styles.input}
+                           autoCapitalize="none"
+                           autoCorrect={false}
+                           keyboardType='default'
+                           returnKeyType="next"
+                           placeholder='Address'
+                           placeholderTextColor='#0F0F0F'
+                           onChangeText={(text) => this.setState({address: text})}
+                />
+                <TextInput style = {styles.input}
+                           autoCapitalize="none"
+                           autoCorrect={false}
+                           keyboardType='numeric'
+                           returnKeyType="next"
+                           placeholder='Capacity'
+                           placeholderTextColor='#0F0F0F'
+                           onChangeText={(text) => this.setState({capacity: text})}
+                />
+                <TextInput style = {styles.input}
+                           autoCapitalize="none"
+                           autoCorrect={false}
+                           keyboardType='default'
+                           returnKeyType="next"
+                           placeholder='Town'
+                           placeholderTextColor='#0F0F0F'
+                           onChangeText={(text) => this.setState({town: text})}
+                />
+                <TouchableOpacity onPress={this.handleChoosePhoto
+                } style={styles.buttonContainer}>
+                    <Text style={styles.buttonText}>Choose photo</Text>
+                </TouchableOpacity>
+
+
+                <TouchableOpacity onPress={() => {this.submitParking()
+                }} style={styles.buttonContainer}>
+                    <Text style={styles.buttonText}>Submit</Text>
+                </TouchableOpacity>
             </KeyboardAvoidingView>
 
         );
@@ -45,11 +111,13 @@ export default class Login extends Component {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        padding: 20,
         backgroundColor: '#9fcdff',
     },
     buttonContainer: {
         backgroundColor: '#ffc107',
-        paddingVertical: 15
+        paddingVertical: 15,
+        margin: 20
     },
     registerText: {
         padding: 10,

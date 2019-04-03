@@ -1,6 +1,7 @@
 import React, { Component} from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Image} from 'react-native';
 import {loginUser, registerUser} from "../RestAPI/ApiCalls";
+//import { AppContainer } from '../../../Navigation';
 
 export default class Login extends Component{
     constructor(props){
@@ -42,7 +43,7 @@ export default class Login extends Component{
 
                     <TouchableOpacity onPress={() => {
                         console.log(this.state.login);
-                            loginUser(this.state.login, this.state.password).then(() => navigate('HomeScreen'))
+                            loginUser(this.state.login, this.state.password).then(() => navigate("HomeScreen"))
                     }} style={styles.buttonContainer}>
                         <Text style={styles.buttonText}>LOGIN</Text>
                     </TouchableOpacity>
@@ -55,6 +56,7 @@ export default class Login extends Component{
         );
     }
 }
+
 
 const styles = StyleSheet.create({
     container: {

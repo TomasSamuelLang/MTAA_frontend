@@ -1,6 +1,6 @@
 import React, { Component} from 'react';
 import { StyleSheet, Text, View, AppRegistry } from 'react-native';
-import AppContainer from './Navigation';
+import InitContainer from './Navigation';
 
 export default class App extends Component {
     constructor(props){
@@ -9,7 +9,7 @@ export default class App extends Component {
 
     render() {
         return (
-            <AppContainer />
+            <InitContainer />
         );
     }
 }

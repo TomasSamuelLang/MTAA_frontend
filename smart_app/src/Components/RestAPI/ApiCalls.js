@@ -44,3 +44,44 @@ export async function loginUser(login, password) {
         console.error(e);
     }
 };
+
+export async function addParkingLot(name, address, capacity, townId) {
+    let town = -1;
+
+    try {
+        let response = await fetch('http://127.0.0.1:8000/gettownid/', {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: townId,
+            }),
+        });
+        if (response.status == 200){
+            let responseJson = await response.json();
+            town = responseJson.id;
+
+            response = await fetch('http://127.0.0.1:8000/parkinglot/', {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: name,
+                    address: address,
+                    capacity: capacity,
+                    actualparkedcars: 0,
+                    town: town,
+                }),
+            });
+            if(response.status == 201){
+                alert("SEXESFUL");
+            }
+        } else alert("SKAP");
+    } catch (e) {
+        console.error(e);
+    }
+};
