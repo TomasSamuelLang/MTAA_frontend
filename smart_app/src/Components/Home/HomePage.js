@@ -53,7 +53,7 @@ export default class HomePage extends Component {
 
                 <TouchableOpacity onPress={() => navigate('AddParkingScreen')
                 } style={styles.buttonContainer}>
-                    <Text style={styles.buttonText}>Show Parking Lots</Text>
+                    <Text style={styles.buttonText}>Show Parking Lot 2</Text>
                 </TouchableOpacity>
 
                 <TextInput style = {styles.input}

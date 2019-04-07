@@ -37,11 +37,12 @@ export async function loginUser(login, password) {
                 }),
             });
         if (response.status == 200){
-            console.log(response)
+            
         }
+        return false;
     }
     catch (e){
-        console.error(e);
+        return false;
     }
 };
 
@@ -85,3 +86,24 @@ export async function addParkingLot(name, address, capacity, townId) {
         console.error(e);
     }
 };
+
+export async function getAllParkingLots(){
+    try {
+        let response = await fetch('http://127.0.0.1:8000/parkinglot/',
+            {
+                method: 'GET',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                },
+            });
+        if (response.status == 200){
+            let responseJson = await response.json();
+
+            return responseJson.result;
+        } else return null;
+    }
+    catch (e){
+        return null;
+    }
+}

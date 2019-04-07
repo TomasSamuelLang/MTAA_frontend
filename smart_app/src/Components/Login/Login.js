@@ -8,9 +8,17 @@ export default class Login extends Component{
         super(props);
         this.state = {
             login: '',
-            password: ''
+            password: '',
+            isLogged: false
         }
     }
+
+    onLogin(navigate) {
+      if (loginUser(this.state.login, this.state.password)){
+          this.setState({isLogged: true});
+          navigate('HomeScreen');
+      }
+    };
 
     render() {
         const { navigate } = this.props.navigation;
@@ -41,10 +49,9 @@ export default class Login extends Component{
                                onChangeText={(text) => this.setState({password: text})}
                     />
 
-                    <TouchableOpacity onPress={() => {
-                        console.log(this.state.login);
-                            loginUser(this.state.login, this.state.password).then(() => navigate("HomeScreen"))
-                    }} style={styles.buttonContainer}>
+                    <TouchableOpacity onPress={() =>
+                            this.onLogin(navigate)
+                    } style={styles.buttonContainer}>
                         <Text style={styles.buttonText}>LOGIN</Text>
                     </TouchableOpacity>
 
