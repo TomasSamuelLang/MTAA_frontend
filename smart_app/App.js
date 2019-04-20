@@ -1,24 +1,21 @@
 import React, { Component} from 'react';
-import { StyleSheet, Text, View, AppRegistry } from 'react-native';
-import InitContainer from './Navigation';
+import { StyleSheet, View } from 'react-native';
+import AppNavigator from './src/navigation/AppNavigator';
 
 export default class App extends Component {
-    constructor(props){
-        super(props);
-    }
 
     render() {
         return (
-            <InitContainer />
+            <View style={styles.container}>
+                <AppNavigator />
+            </View>
         );
     }
 }
 
 const styles = StyleSheet.create({
     container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+        flex: 1,
+        backgroundColor: '#9fcdff',
     },
 });

@@ -1,9 +1,9 @@
 import { createStackNavigator, createAppContainer, createBottomTabNavigator} from 'react-navigation';
-import Login from "./src/Components/Login/Login";
-import Register from "./src/Components/Register/Register";
-import HomePage from "./src/Components/Home/HomePage";
-import AddParking from "./src/Components/Home/AddParking";
-import DeleteParking from "./src/Components/Home/DeleteParking";
+import Login from "./src/components/Login/Login";
+import Register from "./src/components/Register/Register";
+import HomePage from "./src/components/Home/HomePage";
+import AddParking from "./src/components/Home/AddParking";
+import DeleteParking from "./src/components/Home/DeleteParking";
 import React from 'react';
 
 const InitNavigator = createStackNavigator(
@@ -22,28 +22,11 @@ const InitNavigator = createStackNavigator(
         initialRouteName: 'LoginScreen',
     });
 
-// const AppNavigator = createStackNavigator(
-//     {
-//         HomeScreen: {screen: HomePage}
-//
-//     },
-//     {
-//         defaultNavigationOptions: {
-//             headerTintColor: '#fff',
-//             headerStyle: {
-//                 backgroundColor: '#9fcdff',
-//             },
-//             headerTransparent: true
-//         },
-//         initialRouteName: 'HomeScreen',
-//     }
-//
-// );
-
 const AppNavigator = createStackNavigator(
     {
         HomeScreen: {screen: HomePage},
         AddParkingScreen: {screen: AddParking},
+        DeleteScreen: {screen: DeleteParking}
     },
     {
         defaultNavigationOptions: {
@@ -56,15 +39,7 @@ const AppNavigator = createStackNavigator(
         initialRouteName: 'HomeScreen',
     });
 
-const RootNavigator = createBottomTabNavigator(
-    {
-        Login: {screen: InitNavigator},
-        Home: {screen: AppNavigator},
-    } , {
-
-    }
-);
-const InitContainer = createAppContainer(RootNavigator);
+const InitContainer = createAppContainer();
 //export const AppContainer = createAppContainer(AppNavigator);
 
 export default InitContainer;
