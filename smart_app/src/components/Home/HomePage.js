@@ -14,51 +14,55 @@ export default class HomePage extends Component {
             address: '',
             capacity: '',
             town: '',
-            photo: null
+            photo: ''
         };
     }
 
-    createFormData = (photo) => {
-        const data = new FormData();
-
-        data.append("image", {
-            name: photo.fileName,
-            type: photo.type,
-            uri:
-                Platform.OS === "android" ? photo.uri : photo.uri.replace("file://", "")
-        });
-
-        data.append("photo","nameofphoto");
-        data.append("parkinglot",2);
-        return data;
-    };
-
-    handleChoosePhoto = () => {
-        const options = {
-            noData: true,
-        };
-        ImagePicker.launchImageLibrary(options, response => {
-            if (response.uri) {
-                this.setState({ photo: response })
-            }
-        })
+    fetchData = async () => {
+        const response = await fetch('http://192.168.0.108:8000/getphoto/3',
+            {
+                method: 'GET',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                },
+            });
+        let responseJson = await response.json();
+        this.setState({photo: responseJson.image});
     };
 
     handleUploadPhoto = () => {
-        fetch("http://localhost:3000/api/upload", {
-            method: "POST",
-            body: this.createFormData(this.state.photo)
+        fetch("http://192.168.0.108:8000/getphoto/3", {
+            method: "GET",
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            },
         })
             .then(response => response.json())
             .then(response => {
                 console.log("upload succes", response);
                 alert("Upload success!");
-                this.setState({ photo: null });
+                this.setState({ photo: response.image });
             })
             .catch(error => {
                 console.log("upload error", error);
                 alert("Upload failed!");
             });
+    };
+
+    handleChoosePhoto = async () => {
+        const status = await getPermission(Permissions.CAMERA_ROLL);
+        if (status) {
+            const result = await ImagePicker.launchImageLibraryAsync({
+                allowsEditor: false,
+                base64: true
+            });
+
+            if(!result.cancelled) {
+                this.setState({photo: result.base64});
+            }
+        }
     };
 
     submitParking = async () => {
@@ -72,7 +76,7 @@ export default class HomePage extends Component {
         return (
             <KeyboardAvoidingView behavior="padding" style={styles.container}>
                 <View style={styles.homeContainer}>
-                    {/*<Image resizeMode="contain" style={styles.logo} source={{uri: `data:image/png;base64,${this.state.photo}`}} />*/}
+                    <Image resizeMode="contain" style={styles.logo} source={{uri: `data:image/png;base64,${this.state.photo}`}} />
                 </View>
 
                 <TouchableOpacity onPress={() => navigate('DeleteScreen')
@@ -116,7 +120,7 @@ export default class HomePage extends Component {
                            placeholderTextColor='#0F0F0F'
                            onChangeText={(text) => this.setState({town: text})}
                 />
-                <TouchableOpacity onPress={this.handleChoosePhoto()
+                <TouchableOpacity onPress={() => {this.handleChoosePhoto()}
                 } style={styles.buttonContainer}>
                     <Text style={styles.buttonText}>Choose photo</Text>
                 </TouchableOpacity>
