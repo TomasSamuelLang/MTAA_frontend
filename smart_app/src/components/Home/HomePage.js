@@ -1,25 +1,18 @@
 import React, { Component } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Image, Platform} from 'react-native';
-import DropdownMenu from 'react-native-dropdown-menu';
-import {loginUser} from "../RestAPI/ApiCalls";
-import { Permissions, ImagePicker } from 'expo';
-import { addParkingLot , getAllParkingLots } from "../RestAPI/ApiCalls";
-import getPermission from '../../utils/permissions';
+import {View, FlatList, ActivityIndicator} from 'react-native';
+import ListItem from "react-native/local-cli/templates/HelloNavigation/components/ListItem";
 
 export default class HomePage extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            name: '',
-            address: '',
-            capacity: '',
-            town: '',
-            photo: ''
+            isLoading: true,
+            data: []
         };
     }
 
     fetchData = async () => {
-        const response = await fetch('http://192.168.0.108:8000/getphoto/3',
+        const response = await fetch('http://127.0.0.1:8000/parkinglot/',
             {
                 method: 'GET',
                 headers: {
@@ -27,153 +20,37 @@ export default class HomePage extends Component {
                     'Content-Type': 'application/json',
                 },
             });
-        let responseJson = await response.json();
-        this.setState({photo: responseJson.image});
+        this.setState({data: JSON.parse(response._bodyInit)});
     };
 
-    handleUploadPhoto = () => {
-        fetch("http://192.168.0.108:8000/getphoto/3", {
-            method: "GET",
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-            },
-        })
-            .then(response => response.json())
-            .then(response => {
-                console.log("upload succes", response);
-                alert("Upload success!");
-                this.setState({ photo: response.image });
-            })
-            .catch(error => {
-                console.log("upload error", error);
-                alert("Upload failed!");
-            });
-    };
-
-    handleChoosePhoto = async () => {
-        const status = await getPermission(Permissions.CAMERA_ROLL);
-        if (status) {
-            const result = await ImagePicker.launchImageLibraryAsync({
-                allowsEditor: false,
-                base64: true
-            });
-
-            if(!result.cancelled) {
-                this.setState({photo: result.base64});
-            }
-        }
-    };
-
-    submitParking = async () => {
-        let data = getAllParkingLots();
-        //addParkingLot(this.state.name, this.state.address, this.state.capacity, this.state.town);
-    };
+    componentDidMount() {
+        this.fetchData();
+        this.setState({isLoading: false});
+    }
 
     render() {
-        let data = [["Home", "My favourite", "Add parking", "Delete parking" , "My account", "About us"]];
         const {navigate} = this.props.navigation;
-        return (
-            <KeyboardAvoidingView behavior="padding" style={styles.container}>
-                <View style={styles.homeContainer}>
-                    <Image resizeMode="contain" style={styles.logo} source={{uri: `data:image/png;base64,${this.state.photo}`}} />
+        if (this.state.isLoading){
+            return(
+                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+                    <ActivityIndicator />
                 </View>
-
-                <TouchableOpacity onPress={() => navigate('DeleteScreen')
-                } style={styles.buttonContainer}>
-                    <Text style={styles.buttonText}>Show Parking Lot 2</Text>
-                </TouchableOpacity>
-
-                <TextInput style = {styles.input}
-                           autoCapitalize="none"
-                           autoCorrect={false}
-                           keyboardType='default'
-                           returnKeyType="next"
-                           placeholder='Parking lot name'
-                           placeholderTextColor='#0F0F0F'
-                           onChangeText={(text) => this.setState({name: text})}
+            );
+        }
+        return (
+            <View>
+                <FlatList data = {this.state.data}
+                          showsVerticalScrollIndicator = {true}
+                          keyExtractor={item => item.name}
+                          renderItem={({ item }) => (
+                              <ListItem
+                                  title={item.name}
+                                  subtitle={item.address}
+                                  containerStyle={{ borderBottomWidth: 0 }}
+                              />
+                          )}
                 />
-                <TextInput style = {styles.input}
-                           autoCapitalize="none"
-                           autoCorrect={false}
-                           keyboardType='default'
-                           returnKeyType="next"
-                           placeholder='Address'
-                           placeholderTextColor='#0F0F0F'
-                           onChangeText={(text) => this.setState({address: text})}
-                />
-                <TextInput style = {styles.input}
-                           autoCapitalize="none"
-                           autoCorrect={false}
-                           keyboardType='numeric'
-                           returnKeyType="next"
-                           placeholder='Capacity'
-                           placeholderTextColor='#0F0F0F'
-                           onChangeText={(text) => this.setState({capacity: text})}
-                />
-                <TextInput style = {styles.input}
-                           autoCapitalize="none"
-                           autoCorrect={false}
-                           keyboardType='default'
-                           returnKeyType="next"
-                           placeholder='Town'
-                           placeholderTextColor='#0F0F0F'
-                           onChangeText={(text) => this.setState({town: text})}
-                />
-                <TouchableOpacity onPress={() => {this.handleChoosePhoto()}
-                } style={styles.buttonContainer}>
-                    <Text style={styles.buttonText}>Choose photo</Text>
-                </TouchableOpacity>
-
-
-                <TouchableOpacity onPress={() => { this.handleUploadPhoto()
-                }} style={styles.buttonContainer}>
-                    <Text style={styles.buttonText}>Submit</Text>
-                </TouchableOpacity>
-            </KeyboardAvoidingView>
-
+            </View>
         );
     }
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 20,
-        backgroundColor: '#9fcdff',
-    },
-    buttonContainer: {
-        backgroundColor: '#ffc107',
-        paddingVertical: 15,
-        margin: 20
-    },
-    registerText: {
-        padding: 10,
-        textAlign: 'center'
-    },
-    buttonText: {
-        color: '#000000',
-        textAlign: 'center',
-        fontWeight: '700'
-    },
-    input: {
-        height: 40,
-        backgroundColor: '#fff',
-        marginBottom: 10,
-        padding: 10,
-        color: '#000000'
-    },
-    homeContainer: {
-        alignItems: 'center',
-        flexGrow: 1,
-        justifyContent: 'center'
-    },
-    logo: {
-        position: 'absolute',
-        width: 200,
-        height: 100
-    },
-    formContainer: {
-        padding: 20
-    }
-});

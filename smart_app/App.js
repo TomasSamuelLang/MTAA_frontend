@@ -1,21 +1,28 @@
 import React, { Component} from 'react';
-import { StyleSheet, View } from 'react-native';
-import AppNavigator from './src/navigation/AppNavigator';
+import { isSignedIn } from "./src/auth/Auth";
+import { createRootNavigator } from "./src/navigation/AppNavigator";
 
 export default class App extends Component {
 
+    constructor(props){
+        super(props);
+        this.state = {
+          signedIn: false,
+          checkedSignIn: false
+        };
+    }
+
+    componentDidMount(){
+        isSignedIn()
+            .then(res => this.setState({ signedIn: res, checkedSignIn: true}))
+            .catch(err => alert(err));
+    }
+
     render() {
+        const { signedIn } = this.state;
+        const Layout = createRootNavigator(signedIn);
         return (
-            <View style={styles.container}>
-                <AppNavigator />
-            </View>
+            <Layout />
         );
     }
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#9fcdff',
-    },
-});

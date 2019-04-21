@@ -6,9 +6,24 @@ export default class Register extends Component{
     constructor(props){
         super(props);
         this.state = {
-            login: '',
+            username: '',
             password: '',
-            passwordverification: '',
+            verification: ''
+        }
+    }
+
+    async _onRegister(username, password, verification, navigate){
+        if (username === '' || password === '' || verification === ''){
+            alert("All fields must be filled");
+        }
+        else if (password === verification){
+            let result = await registerUser(username, password);
+            if (result){
+                navigate('LoginScreen');
+            }
+        }
+        else {
+            alert("Password and verification password is not equal!");
         }
     }
 
@@ -28,34 +43,29 @@ export default class Register extends Component{
                                returnKeyType="next"
                                placeholder='Username'
                                placeholderTextColor='#0F0F0F'
-                               onChangeText={(text) => this.setState({login: text})}
+                               onChangeText={(text) => this.setState({username: text})}
                     />
-
                     <TextInput style = {styles.input}
                                returnKeyType="next"
-                               ref={(input)=> this.passwordInput = input}
+                               ref={(input) => this.passwordInput = input}
+                               onSubmitEditing={() => this.verificationInput.focus()}
                                placeholder='Password'
                                placeholderTextColor='#0f0f0f'
                                secureTextEntry
                                onChangeText={(text) => this.setState({password: text})}
                     />
-
                     <TextInput style = {styles.input}
                                returnKeyType="go"
+                               ref={(input) => this.verificationInput = input}
                                placeholder='Password Verification'
                                placeholderTextColor='#0f0f0f'
                                secureTextEntry
-                               onChangeText={(text) => this.setState({passwordverification: text})}
+                               onChangeText={(text) => this.setState({verification: text})}
                     />
 
                     <TouchableOpacity onPress={() => {
-                        console.log(this.state.login);
-                        if(this.state.password == this.state.passwordverification) {
-                            registerUser(this.state.login, this.state.password).then(() => navigate('LoginScreen'))
-                        }
-                        else{
-                            console.log("Passwords are different")
-                        }
+                        this._onRegister(this.state.username, this.state.password,
+                            this.state.verification, navigate)
                     }} style={styles.buttonContainer}>
                         <Text style={styles.buttonText}>REGISTER</Text>
                     </TouchableOpacity>

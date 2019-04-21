@@ -1,6 +1,8 @@
-export async function registerUser(login, password) {
+import {storeID, storeName, storeToken} from "../../auth/Auth";
+
+export async function registerUser(username, password) {
     try {
-        let response = await fetch('http://127.0.0.1:8000/registeruser/',
+        let response = await fetch('http://192.168.0.108:8000/registeruser/',
             {
                 method: 'POST',
                 headers: {
@@ -8,43 +10,63 @@ export async function registerUser(login, password) {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    login:login,
-                    password:password,
-                }),
-            });
-        if (response.status == 201){
-            let responseJson = await response.json();
-            console.log(responseJson);
-        }
-
-    } catch (e) {
-        console.error(e);
-    }
-};
-
-export async function loginUser(login, password) {
-    try {
-        let response = await fetch('http://127.0.0.1:8000/loginuser/',
-            {
-                method: 'POST',
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    login: login,
+                    username: username,
                     password: password,
                 }),
             });
-        if (response.status == 200){
-            
+        let response_status = await response.status;
+        if (response_status === 201){
+            return true;
         }
+        if (response_status === 400){
+            alert("This username already exists. Please change your username.");
+            return false;
+        }
+        alert("Registration failed.");
+        return false;
+    } catch (e) {
+        alert("Registration failed. Please check your internet connectivity.");
+        return false;
+    }
+}
+
+export async function loginUser(username, password) {
+    try {
+        let response = await fetch('http://192.168.0.108:8000/loginuser/',
+            {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: username,
+                    password: password,
+                }),
+            });
+        let response_status = await response.status;
+        if (response_status === 200){
+            let responseJson = await response.json();
+            let user_id = responseJson.id;
+            let user_name = responseJson.username;
+            let user_token = responseJson.token;
+            //storeID(user_id);
+            storeToken(user_token);
+            //storeName(user_name);
+            return true;
+        }
+        if (response_status === 404){
+            alert("This username does not exist. Please check your input or sign up first.");
+            return false;
+        }
+        alert("Login failed.");
         return false;
     }
     catch (e){
+        alert("Login failed. Please check your internet connectivity.");
         return false;
     }
-};
+}
 
 export async function addParkingLot(name, address, capacity, townId) {
     let town = -1;
@@ -85,7 +107,7 @@ export async function addParkingLot(name, address, capacity, townId) {
     } catch (e) {
         console.error(e);
     }
-};
+}
 
 export async function getAllParkingLots(){
     try {

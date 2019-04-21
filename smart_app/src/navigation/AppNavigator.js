@@ -1,11 +1,12 @@
-import {createAppContainer, createStackNavigator, createSwitchNavigator} from 'react-navigation';
+import { createAppContainer, createStackNavigator, createSwitchNavigator, createBottomTabNavigator } from 'react-navigation';
 import HomePage from "../components/Home/HomePage";
-import DeleteParking from "../components/Home/DeleteParking";
 import Login from "../components/Login/Login";
 import Register from "../components/Register/Register";
 import AddParking from "../components/Home/AddParking";
+import ParkingLotDetails from "../components/Home/ParkingLotDetails";
+import Profile from "../components/Home/Profile";
 
-const InitNavigator = createStackNavigator(
+const SignedOut = createStackNavigator(
     {
         LoginScreen: {screen: Login},
         RegisterScreen: {screen: Register}
@@ -21,11 +22,9 @@ const InitNavigator = createStackNavigator(
         initialRouteName: 'LoginScreen',
     });
 
-const AppNavigator = createStackNavigator(
-    {
-        HomeScreen: {screen: HomePage},
-        AddParkingScreen: {screen: AddParking},
-        DeleteScreen: {screen: DeleteParking}
+const HomeStack = createStackNavigator({
+    HomeScreen: {screen: HomePage},
+    DetailScreen: {screen: ParkingLotDetails}
     },
     {
         defaultNavigationOptions: {
@@ -38,13 +37,31 @@ const AppNavigator = createStackNavigator(
         initialRouteName: 'HomeScreen',
     });
 
-const SwitchNavigator = createSwitchNavigator(
+const SignedIn = createBottomTabNavigator(
     {
-        Login: InitNavigator,
-        Home: AppNavigator
+        Home: {screen: HomeStack},
+        AddParking: {screen: AddParking},
+        Profile: {screen: Profile}
     },
     {
-        initialRouteName: 'Login'
+        initialRouteName: 'Home',
     });
 
-export default createAppContainer(SwitchNavigator);
+export const createRootNavigator = (signedIn = false) => {
+  return createAppContainer(
+      createSwitchNavigator({
+            SignedOut: {screen: SignedOut},
+            SignedIn: {screen: SignedIn}
+          },
+          {
+              defaultNavigationOptions: {
+                  headerTintColor: '#fff',
+                  headerStyle: {
+                      backgroundColor: '#9fcdff',
+                  },
+                  headerTransparent: false
+              },
+              initialRouteName: signedIn ? "SignedIn" : "SignedOut"
+          })
+  );
+};

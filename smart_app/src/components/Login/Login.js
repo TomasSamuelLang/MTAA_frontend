@@ -1,24 +1,28 @@
 import React, { Component} from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Image} from 'react-native';
-import {loginUser, registerUser} from "../RestAPI/ApiCalls";
-//import { AppContainer } from '../../../Navigation';
+import { loginUser } from "../RestAPI/ApiCalls";
+import { onSignIn } from "../../auth/Auth";
 
 export default class Login extends Component{
     constructor(props){
         super(props);
         this.state = {
-            login: '',
-            password: '',
-            isLogged: false
+            username: '',
+            password: ''
         }
     }
 
-    onLogin(navigate) {
-      if (loginUser(this.state.login, this.state.password)){
-          this.setState({isLogged: true});
-          navigate('HomeScreen');
-      }
-    };
+    async onLogin(username, password, navigate) {
+        if (username === '' || password === ''){
+            alert("All fields must be filled");
+        }
+        else {
+            let result = await loginUser(username, password);
+            if (result){
+                onSignIn().then(() => navigate("SignedIn"));
+            }
+        }
+    }
 
     render() {
         const { navigate } = this.props.navigation;
@@ -37,7 +41,7 @@ export default class Login extends Component{
                                returnKeyType="next"
                                placeholder='Username'
                                placeholderTextColor='#0F0F0F'
-                               onChangeText={(text) => this.setState({login: text})}
+                               onChangeText={(text) => this.setState({username: text})}
                     />
 
                     <TextInput style = {styles.input}
@@ -50,7 +54,7 @@ export default class Login extends Component{
                     />
 
                     <TouchableOpacity onPress={() =>
-                            this.onLogin(navigate)
+                            this.onLogin(this.state.username, this.state.password, navigate)
                     } style={styles.buttonContainer}>
                         <Text style={styles.buttonText}>LOGIN</Text>
                     </TouchableOpacity>
