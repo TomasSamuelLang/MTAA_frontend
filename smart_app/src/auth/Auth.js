@@ -5,8 +5,8 @@ const USER_ID = "USER_ID";
 const USER_TOKEN = "USER_TOKEN";
 const USER_NAME = "USER_NAME";
 
-export const storeID = (id) => AsyncStorage.setItem(USER_ID, JSON.stringify(id));
-export const getID = () => AsyncStorage.getItem(USER_ID, (value) => {JSON.parse(value)});
+export const storeID = (id) => AsyncStorage.setItem(USER_ID, id.toString());
+export const getID = () => AsyncStorage.getItem(USER_ID);
 export const removeID = () => AsyncStorage.removeItem(USER_ID);
 
 export const storeToken = (token) => AsyncStorage.setItem(USER_TOKEN, token);

@@ -1,7 +1,6 @@
 import React, { Component} from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Image, FlatList} from 'react-native';
-import {getAllParkingLots} from "../RestAPI/ApiCalls";
-import {ImagePicker} from "expo";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Picker, Alert, ScrollView } from 'react-native';
+import { ImagePicker, Permissions } from "expo";
 import getPermission from "../../utils/permissions";
 
 export default class AddParking extends Component{
@@ -12,42 +11,62 @@ export default class AddParking extends Component{
             address: '',
             capacity: '',
             town: '',
-            photo: ''
+            photo: '',
+            towns: []
         };
     }
 
-    fetchData = async () => {
-        const response = await fetch('http://192.168.0.108:8000/getphoto/3',
-            {
-                method: 'GET',
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                },
-            });
-        let responseJson = await response.json();
-        this.setState({photo: responseJson.image});
-    };
-
-    handleUploadPhoto = () => {
-        fetch("http://192.168.0.108:8000/getphoto/3", {
-            method: "GET",
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-            },
-        })
-            .then(response => response.json())
-            .then(response => {
-                console.log("upload succes", response);
-                alert("Upload success!");
-                this.setState({ photo: response.image });
-            })
-            .catch(error => {
-                console.log("upload error", error);
-                alert("Upload failed!");
-            });
-    };
+    async addParkingLot(name, address, capacity, townId, photo) {
+        if (name !== '' && address !== '' && capacity !== '' && townId !== ''){
+            try {
+                let response = await fetch('http://192.168.0.108:8000/parkinglot/',{
+                    method: 'POST',
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        address: address,
+                        capacity: capacity,
+                        actualparkedcars: 0,
+                        town: townId,
+                    }),
+                });
+                let response_status = await response.status;
+                if (response_status === 201){
+                    if (photo !== ''){
+                        let photo_base = photo;
+                        let responseJson = await response.json();
+                        fetch('http://192.168.0.108:8000/uploadphoto/',{
+                            method: 'PUT',
+                            headers: {
+                                Accept: 'application/json',
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                parkinglot: responseJson.id,
+                                photo: name,
+                                image: photo_base
+                            }),
+                        });
+                    }
+                    this.setState({
+                        name: '',
+                        address: '',
+                        capacity: '',
+                        town: '',
+                        photo: ''
+                    });
+                    Alert.alert('Success', 'Parking lot successfully added.');
+                } else if (response_status === 400){
+                    Alert.alert('Error', 'Request failed. Please check your input.');
+                }
+            } catch (e) {
+                Alert.alert('Error', 'Request failed. Please check internet connectivity.');
+            }
+        } else alert("All fields must be filled.");
+    }
 
     handleChoosePhoto = async () => {
         const status = await getPermission(Permissions.CAMERA_ROLL);
@@ -63,68 +82,93 @@ export default class AddParking extends Component{
         }
     };
 
-    submitParking = async () => {
-        let data = getAllParkingLots();
-        //addParkingLot(this.state.name, this.state.address, this.state.capacity, this.state.town);
-    };
+    async getAllTowns(){
+        let tempdata = [];
+        let response = await fetch('http://192.168.0.108:8000/gettowns/',{
+            method: "GET",
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            }
+        });
+        let responseJson = await response.json();
+        tempdata = responseJson;
+        this.setState({towns: tempdata});
+    }
+
+    dynamic(){
+        return this.state.towns.map(user => (
+            <Picker.Item key={user.name} label={user.name} value={user.id} />
+        ))
+    }
+
+    componentDidMount(){
+        this.getAllTowns();
+    }
 
     render() {
-        const {navigate} = this.props.navigation;
         return (
             <KeyboardAvoidingView behavior="padding" style={styles.container}>
-                <TouchableOpacity onPress={() => navigate('DeleteScreen')
-                } style={styles.buttonContainer}>
-                    <Text style={styles.buttonText}>Show Parking Lot 2</Text>
-                </TouchableOpacity>
+                <ScrollView style={styles.formContainer}>
+                    <Text style={styles.header}>
+                        Add new parking lot
+                    </Text>
+                    <TextInput style = {styles.input}
+                               value={this.state.name}
+                               autoCapitalize="none"
+                               autoCorrect={false}
+                               onSubmitEditing={() => this.addressInput.focus()}
+                               keyboardType='default'
+                               returnKeyType="next"
+                               placeholder='Parking lot name'
+                               placeholderTextColor='#0F0F0F'
+                               onChangeText={(text) => this.setState({name: text})}
+                    />
+                    <TextInput style = {styles.input}
+                               value={this.state.address}
+                               autoCapitalize="none"
+                               autoCorrect={false}
+                               ref={(input) => this.addressInput = input}
+                               onSubmitEditing={() => this.capacityInput.focus()}
+                               keyboardType='default'
+                               returnKeyType="next"
+                               placeholder='Address'
+                               placeholderTextColor='#0F0F0F'
+                               onChangeText={(text) => this.setState({address: text})}
+                    />
+                    <TextInput style = {styles.input}
+                               value={this.state.capacity}
+                               autoCapitalize="none"
+                               autoCorrect={false}
+                               keyboardType='numeric'
+                               ref={(input) => this.capacityInput = input}
+                               returnKeyType="done"
+                               placeholder='Capacity'
+                               placeholderTextColor='#0F0F0F'
+                               onChangeText={(text) => this.setState({capacity: text})}
+                    />
+                    <Text>
+                        Choose town:
+                    </Text>
+                    <Picker
+                        selectedValue={this.state.town}
+                        keyExtractor={item => item.name}
+                        onValueChange={(itemValue, itemIndex) => this.setState({town: itemValue})}>
+                        {this.dynamic()}
+                    </Picker>
 
-                <TextInput style = {styles.input}
-                           autoCapitalize="none"
-                           autoCorrect={false}
-                           keyboardType='default'
-                           returnKeyType="next"
-                           placeholder='Parking lot name'
-                           placeholderTextColor='#0F0F0F'
-                           onChangeText={(text) => this.setState({name: text})}
-                />
-                <TextInput style = {styles.input}
-                           autoCapitalize="none"
-                           autoCorrect={false}
-                           keyboardType='default'
-                           returnKeyType="next"
-                           placeholder='Address'
-                           placeholderTextColor='#0F0F0F'
-                           onChangeText={(text) => this.setState({address: text})}
-                />
-                <TextInput style = {styles.input}
-                           autoCapitalize="none"
-                           autoCorrect={false}
-                           keyboardType='numeric'
-                           returnKeyType="next"
-                           placeholder='Capacity'
-                           placeholderTextColor='#0F0F0F'
-                           onChangeText={(text) => this.setState({capacity: text})}
-                />
-                <TextInput style = {styles.input}
-                           autoCapitalize="none"
-                           autoCorrect={false}
-                           keyboardType='default'
-                           returnKeyType="next"
-                           placeholder='Town'
-                           placeholderTextColor='#0F0F0F'
-                           onChangeText={(text) => this.setState({town: text})}
-                />
-                <TouchableOpacity onPress={() => {this.handleChoosePhoto()}
-                } style={styles.buttonContainer}>
-                    <Text style={styles.buttonText}>Choose photo</Text>
-                </TouchableOpacity>
+                    <TouchableOpacity onPress={() => {this.handleChoosePhoto()}
+                    } style={styles.photoButtContainer}>
+                        <Text style={styles.buttonText}>Choose photo of parking lot</Text>
+                    </TouchableOpacity>
 
-
-                <TouchableOpacity onPress={() => { this.handleUploadPhoto()
-                }} style={styles.buttonContainer}>
-                    <Text style={styles.buttonText}>Submit</Text>
-                </TouchableOpacity>
+                    <TouchableOpacity onPress={() => { this.addParkingLot(this.state.name, this.state.address,
+                        this.state.capacity, this.state.town, this.state.photo)
+                    }} style={styles.submitButtContainer}>
+                        <Text style={styles.buttonText}>Submit</Text>
+                    </TouchableOpacity>
+                </ScrollView>
             </KeyboardAvoidingView>
-
         );
     }
 }
@@ -132,13 +176,22 @@ export default class AddParking extends Component{
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 20,
+        justifyContent: 'flex-end',
         backgroundColor: '#9fcdff',
     },
-    buttonContainer: {
+    header: {
+        fontSize: 24,
+        textAlign: 'center',
+        padding: 20
+    },
+    photoButtContainer: {
         backgroundColor: '#ffc107',
         paddingVertical: 15,
-        margin: 20
+        marginBottom: 10
+    },
+    submitButtContainer: {
+        backgroundColor: '#ffc107',
+        paddingVertical: 15,
     },
     registerText: {
         padding: 10,
@@ -167,6 +220,6 @@ const styles = StyleSheet.create({
         height: 100
     },
     formContainer: {
-        padding: 20
+        padding: 20,
     }
 });

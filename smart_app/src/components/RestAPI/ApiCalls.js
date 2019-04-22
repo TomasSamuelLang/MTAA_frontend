@@ -50,9 +50,9 @@ export async function loginUser(username, password) {
             let user_id = responseJson.id;
             let user_name = responseJson.username;
             let user_token = responseJson.token;
-            //storeID(user_id);
+            storeID(user_id);
             storeToken(user_token);
-            //storeName(user_name);
+            storeName(user_name);
             return true;
         }
         if (response_status === 404){
