@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image, ActivityIndicator} from 'react-native';
+import getPermission from "../../utils/permissions";
+import {ImagePicker, Permissions} from "expo";
 
 export default class ParkingLotDetails extends Component {
 
@@ -7,77 +9,76 @@ export default class ParkingLotDetails extends Component {
         super(props);
         this.state = {
             id: '',
-            text: '',
-            picture: '',
+            photo: '',
             name: '',
             address: '',
             capacity: '',
             parked: '',
             town: '',
-            country: ''
+            country: '',
+            isLoading: true
         };
     }
 
     fetchData = async (id) => {
-        if(id !== null) {
-            // const response = await fetch('http://192.168.100.37:8000/getphoto/' + id,{
-            //     method: 'GET',
-            //     headers: {
-            //         Accept: 'application/json',
-            //         'Content-Type': 'application/json',
-            //     }
-            // });
-            // const json = await response.json();
-            // this.setState({picture: json.photo});
-
-            const res = await fetch('http://192.168.100.37:8000/parkinglot/' + id, {
+        let res = await fetch('http://192.168.0.108:8000/parkinglot/' + id, {
+            method: 'GET',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            }
+        });
+        let response_status = await res.status;
+        if (response_status === 404){
+            alert("This parking lot does not exist.");
+        }
+        else {
+            let responseJson = await res.json();
+            this.setState({
+                name: responseJson.name, address: responseJson.address, capacity: responseJson.capacity,
+                parked: responseJson.actualparkedcars, town: responseJson.town.name, country: responseJson.town.country.name
+            });
+            let response = await fetch('http://192.168.0.108:8000/getphoto/' + id,{
                 method: 'GET',
                 headers: {
                     Accept: 'application/json',
                     'Content-Type': 'application/json',
                 }
             });
-            const jjson = await res.json();
-            this.setState({
-                name: jjson.name, address: jjson.address, capacity: jjson.capacity,
-                parked: jjson.actualparkedcars, town: jjson.town.name, country: jjson.town.country.name
-            });
-        }
-    };
-
-    // componentWillMount() {
-    //     //this.fetchData();
-    //
-    // };
-
-    onParked = async (id) => {
-        const response = await fetch('http://127.0.0.1:8000/parkinglot/' + id,{
-            method: 'PUT',
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                actualparkedcars: this.state.parked + 1,
-            }),
-        });
-        if (response.status == 200){
-            alert("Uspesne si zaparkoval");
-            let pom = this.state.parked + 1;
-            this.setState({parked: pom});
-        }
-    };
-
-    onDelete = async (id) => {
-        const response = await fetch('http://127.0.0.1:8000/parkinglot/' + id,{
-            method: 'DELETE',
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
+            let photo_response_status = await response.status;
+            if (photo_response_status === 400){
+                this.setState({photo: '', isLoading: false});
             }
-        });
-        if (response.status ==204){
-            alert("Uspesne si vymazal");
+            else {
+                let photoJson = await response.json();
+                this.setState({photo: photoJson.image, isLoading: false});
+            }
+        }
+    };
+
+    handleChoosePhoto = async () => {
+        const status = await getPermission(Permissions.CAMERA_ROLL);
+        if (status) {
+            const result = await ImagePicker.launchImageLibraryAsync({
+                allowsEditor: false,
+                base64: true
+            });
+
+            if(!result.cancelled) {
+                this.setState({photo: result.base64});
+                fetch('http://192.168.0.108:8000/uploadphoto/',{
+                    method: 'PUT',
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        parkinglot: this.state.id,
+                        photo: this.state.name,
+                        image: result.base64
+                    }),
+                });
+            }
         }
     };
 
@@ -87,26 +88,25 @@ export default class ParkingLotDetails extends Component {
     }
 
     render() {
-        const {navigate} = this.props.navigation;
         return (
             <View style={styles.container}>
-                <Text style={styles.buttonText1}>Name: {this.state.name}</Text>
-                <Text style={styles.buttonText1}>Address: {this.state.address}</Text>
-                <Text style={styles.buttonText1}>Capacity: {this.state.capacity}</Text>
-                <Text style={styles.buttonText1}>Actual parked cars: {this.state.parked}</Text>
-                <Text style={styles.buttonText1}>Town: {this.state.town}</Text>
-                <Text style={styles.buttonText1}>Country: {this.state.country}</Text>
-                <Image style={{width: 300, height: 300}} source={{uri: this.state.picture}}/>
-                <TouchableOpacity onPress={() => this.onParked()}
-                                  style={styles.buttonContainer}>
-                    <Text style={styles.buttonText}>ZAPARKOVAT</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => this.onDelete().then(() => navigate('HomeScreen'))}
-                                  style={styles.buttonContainer}>
-                    <Text style={styles.buttonText}>DELETE</Text>
-                </TouchableOpacity>
+                <View style={styles.textContainer}>
+                    <Text style={styles.nameText}>{this.state.name}</Text>
+                    <Text style={styles.addressText}>{this.state.address}</Text>
+                    <Text style={styles.localityText}>{this.state.town}, {this.state.country}</Text>
+                    <Text style={styles.parkedText}>{this.state.parked}/{this.state.capacity}</Text>
+                </View>
+                <View style={styles.bottom}>
+                    {this.state.isLoading ? <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+                        <ActivityIndicator />
+                    </View> : <Image style={{width: null, height: 300}} source={{uri: `data:image/png;base64,${this.state.photo}`}}/>}
+                    <TouchableOpacity style={styles.buttContainer} onPress={() => this.handleChoosePhoto()}>
+                        <Text style={styles.buttText}>
+                            Upload new photo
+                        </Text>
+                    </TouchableOpacity>
+                </View>
             </View>
-
         );
     }
 }
@@ -114,47 +114,38 @@ export default class ParkingLotDetails extends Component {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 20,
-        marginTop: 80,
         backgroundColor: '#9fcdff',
     },
-    buttonContainer: {
+    textContainer: {
+        padding: 20
+    },
+    bottom: {
+        flex: 1,
+        justifyContent: 'flex-end',
+        bottom: 0
+    },
+    buttContainer: {
         backgroundColor: '#ffc107',
         paddingVertical: 15,
-        margin: 20
     },
-    registerText: {
-        padding: 10,
-        textAlign: 'center'
-    },
-    buttonText: {
+    buttText: {
         color: '#000000',
         textAlign: 'center',
         fontWeight: '700'
     },
-    buttonText1: {
-        color: '#000000',
+    parkedText: {
+        fontSize: 32,
         fontWeight: '700',
-        fontSize: 15
+        marginTop: 5
     },
-    input: {
-        height: 40,
-        backgroundColor: '#fff',
-        marginBottom: 10,
-        padding: 10,
-        color: '#000000'
+    nameText: {
+        fontSize: 36,
+        fontWeight: '700',
     },
-    homeContainer: {
-        alignItems: 'center',
-        flexGrow: 1,
-        justifyContent: 'center'
+    addressText: {
+        fontSize: 24
     },
-    logo: {
-        position: 'absolute',
-        width: 200,
-        height: 100
-    },
-    formContainer: {
-        padding: 20
+    localityText: {
+        fontSize: 20
     }
 });

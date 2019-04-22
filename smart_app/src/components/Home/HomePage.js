@@ -11,12 +11,13 @@ export default class HomePage extends Component {
         this.state = {
             isLoading: true,
             data: [],
-            arrayholder: [],
+            value: ''
         };
+        this.arrayholder = [];
     }
 
     fetchData = async () => {
-        const response = await fetch('http://192.168.100.37:8000/parkinglot/',
+        let response = await fetch('http://192.168.0.108:8000/parkinglot/',
             {
                 method: 'GET',
                 headers: {
@@ -24,17 +25,19 @@ export default class HomePage extends Component {
                     'Content-Type': 'application/json',
                 },
             });
-        this.setState({data: JSON.parse(response._bodyInit)});
+        let responseJson = await JSON.parse(response._bodyInit);
+        this.setState({data: responseJson});
+        this.arrayholder = responseJson;
     };
 
-    componentDidMount() {
-        this.fetchData();
+    async componentDidMount() {
+        await this.fetchData();
         this.setState({isLoading: false});
     }
 
     onParked = async (id, park) => {
 
-        const response = await fetch('http://192.168.100.37:8000/parkinglot/' + id,{
+        const response = await fetch('http://192.168.0.108:8000/parkinglot/' + id,{
             method: 'PUT',
             headers: {
                 Accept: 'application/json',
@@ -53,7 +56,7 @@ export default class HomePage extends Component {
 
     onDelete = async (id) => {
         try {
-            let response = await fetch('http://192.168.100.37:8000/parkinglot/' + id,{
+            let response = await fetch('http://192.168.0.108:8000/parkinglot/' + id,{
                 method: 'DELETE',
                 headers: {
                     Accept: 'application/json',
@@ -76,8 +79,7 @@ export default class HomePage extends Component {
 
     onLike = async (id) => {
         try{
-            console.log(getID())
-            let response = await fetch('http://192.168.100.37:8000/parkinglot/' + getID(), {
+            let response = await fetch('http://192.168.0.108:8000/parkinglot/' + getID(), {
                 method: 'POST',
                 headers: {
                     Accept: 'application/json',
@@ -85,7 +87,7 @@ export default class HomePage extends Component {
                 },
                 body: JSON.stringify({
                     parkinglot: id,
-                    user: getID(),
+                    user: await getID(),
                 }),
             });
             let response_status = await response.status;
@@ -98,15 +100,20 @@ export default class HomePage extends Component {
         }
     };
 
-    searchFilter = async (text) => {
+    searchFilterFunction = text => {
+        this.setState({
+            value: text,
+        });
+
         const newData = this.arrayholder.filter(item => {
-            const itemData = `${item.name.toUpperCase()}   
-     ${item.address.toUpperCase()}`;
-            const textData = text.toUpperCase();
+            const itemData = `${item.name} ${item.address} ${item.town}`;
+            const textData = text;
 
             return itemData.indexOf(textData) > -1;
         });
-        this.setState({ data: newData });
+        this.setState({
+            data: newData,
+        });
     };
 
     render() {
@@ -125,18 +132,19 @@ export default class HomePage extends Component {
                 placeholder="Type Here..."
                 lightTheme
                 round
-                onChangeText={text => this.searchFilter(text)}
+                onChangeText={text => this.searchFilterFunction(text)}
                 autoCorrect={false}
+                value={this.state.value}
             />
             <SwipeListView
                 useFlatList
                 data={this.state.data}
-                keyExtractor={item => item.name}
+                keyExtractor={item => item.id.toString()}
                 renderItem={(data, rowMap) => (
                     <View style={styles.rowFront} >
-                        <TouchableOpacity onPress={ () => navigate('DetailScreen', {id: data.item.id})}>
-                            <Text style={styles.rowText}>{data.item.name}</Text>
-                            <Text>{data.item.id}</Text>
+                        <TouchableOpacity style={{width: 300, paddingVertical: 10}} onPress={() => navigate('DetailScreen', {id: data.item.id})}>
+                            <Text style={styles.rowTextMain}>{data.item.name}</Text>
+                            <Text style={styles.rowText}>{data.item.address}</Text>
                         </TouchableOpacity>
                     </View>
                 )}
@@ -144,11 +152,11 @@ export default class HomePage extends Component {
                     <View style={styles.rowBack}>
                         <TouchableOpacity onPress={() => this.onParked(data.item.id,data.item.actualparkedcars)}>
                             <View>
-                                <Text style={styles.backTextWhite}>Park</Text>
+                                <Text style={styles.backTextBlack}>Park</Text>
                             </View>
                         </TouchableOpacity>
                         <TouchableOpacity style={[styles.backRightBtn, styles.backRightBtnLeft]} onPress={() => this.onLike(data.item.id)}>
-                            <Text>Like</Text>
+                            <Text style={styles.backTextWhite}>Like</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={[styles.backRightBtn, styles.backRightBtnRight]}
@@ -237,19 +245,25 @@ const styles = StyleSheet.create({
     },
     rowFront: {
         alignItems: "center",
-        backgroundColor: "#ff9f43",
+        backgroundColor: "#ffc107",
         justifyContent: "center",
-        height: 60,
+        height: 80,
         borderBottomWidth: 1,
         borderBottomColor: "#feca57"
+    },
+    rowTextMain: {
+        color: "#222f3e",
+        fontWeight: "600",
+        fontSize: 20,
+        borderBottomWidth: 1,
+        borderBottomColor: "#c8d6e5",
     },
     rowText: {
         color: "#222f3e",
         fontWeight: "600",
-        fontSize: 16,
+        fontSize: 14,
         borderBottomWidth: 1,
         borderBottomColor: "#c8d6e5",
-        marginLeft: 10,
     },
     rowBack: {
         alignItems: 'center',
@@ -276,6 +290,9 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         padding: 15,
+    },
+    backTextBlack:{
+        color: "#222f3e"
     },
     backTextWhite: {
         color: '#FFF',

@@ -1,5 +1,5 @@
 import React, { Component} from 'react';
-import { Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView } from 'react-native';
+import { Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, ScrollView, Picker } from 'react-native';
 import {ImagePicker} from "expo";
 import getPermission from "../../utils/permissions";
 

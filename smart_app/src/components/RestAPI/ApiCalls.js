@@ -2,7 +2,7 @@ import {storeID, storeName, storeToken, getID} from "../../auth/Auth";
 
 export async function registerUser(username, password) {
     try {
-        let response = await fetch('http://192.168.100.37:8000/registeruser/',
+        let response = await fetch('http://192.168.0.108:8000/registeruser/',
             {
                 method: 'POST',
                 headers: {
@@ -32,7 +32,7 @@ export async function registerUser(username, password) {
 
 export async function loginUser(username, password) {
     try {
-        let response = await fetch('http://192.168.100.37:8000/loginuser/',
+        let response = await fetch('http://192.168.0.108:8000/loginuser/',
             {
                 method: 'POST',
                 headers: {
@@ -50,10 +50,9 @@ export async function loginUser(username, password) {
             let user_id = responseJson.id;
             let user_name = responseJson.username;
             let user_token = responseJson.token;
-            storeID(user_id.toString());
-            console.log(getID());
+            storeID(user_id);
             storeToken(user_token);
-            //storeName(user_name);
+            storeName(user_name);
             return true;
         }
         if (response_status === 404){

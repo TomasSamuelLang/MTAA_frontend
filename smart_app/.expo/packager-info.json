@@ -1,9 +1,5 @@
 {
-  "expoServerPort": null,
-  "expoServerNgrokUrl": "https://6m-evg.anonymous.smart-app.exp.direct",
-  "packagerNgrokUrl": "https://packager.6m-evg.anonymous.smart-app.exp.direct",
-  "ngrokPid": 33816,
-  "devToolsPort": 19002,
-  "packagerPort": null,
-  "packagerPid": null
+  "expoServerNgrokUrl": null,
+  "packagerNgrokUrl": null,
+  "ngrokPid": null
 }

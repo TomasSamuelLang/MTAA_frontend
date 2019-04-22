@@ -23,8 +23,15 @@ const SignedOut = createStackNavigator(
     });
 
 const HomeStack = createStackNavigator({
-    HomeScreen: {screen: HomePage},
-    DetailScreen: {screen: ParkingLotDetails}
+    HomeScreen: {screen: HomePage,
+        navigationOptions: () => ({
+        title: 'All parking lots',
+            headerBackTitle: 'Back'
+    })},
+    DetailScreen: {screen: ParkingLotDetails,
+        navigationOptions: () => ({
+            title: 'Detail'
+        })},
     },
     {
         defaultNavigationOptions: {
