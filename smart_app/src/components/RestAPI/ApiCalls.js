@@ -1,8 +1,8 @@
-import {storeID, storeName, storeToken, getID} from "../../auth/Auth";
+import {storeID, storeName, storeToken } from "../../auth/Auth";
 
 export async function registerUser(username, password) {
     try {
-        let response = await fetch('http://127.0.0.1:8000/registeruser/',
+        let response = await fetch('http://192.168.0.108:8000/registeruser/',
             {
                 method: 'POST',
                 headers: {
@@ -32,7 +32,7 @@ export async function registerUser(username, password) {
 
 export async function loginUser(username, password) {
     try {
-        let response = await fetch('http://127.0.0.1:8000/loginuser/',
+        let response = await fetch('http://192.168.0.108:8000/loginuser/',
             {
                 method: 'POST',
                 headers: {
@@ -56,7 +56,7 @@ export async function loginUser(username, password) {
             return true;
         }
         if (response_status === 404){
-            alert("This username does not exist. Please check your input or sign up first.");
+            alert("Username or password is wrong. Please check your input or sign up first.");
             return false;
         }
         alert("Login failed.");
@@ -65,67 +65,5 @@ export async function loginUser(username, password) {
     catch (e){
         alert("Login failed. Please check your internet connectivity.");
         return false;
-    }
-}
-
-export async function addParkingLot(name, address, capacity, townId) {
-    let town = -1;
-
-    try {
-        let response = await fetch('http://127.0.0.1:8000/gettownid/', {
-            method: 'POST',
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                name: townId,
-            }),
-        });
-        if (response.status == 200){
-            let responseJson = await response.json();
-            town = responseJson.id;
-
-            response = await fetch('http://127.0.0.1:8000/parkinglot/', {
-                method: 'POST',
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    name: name,
-                    address: address,
-                    capacity: capacity,
-                    actualparkedcars: 0,
-                    town: town,
-                }),
-            });
-            if(response.status == 201){
-                alert("SEXESFUL");
-            }
-        } else alert("SKAP");
-    } catch (e) {
-        console.error(e);
-    }
-}
-
-export async function getAllParkingLots(){
-    try {
-        let response = await fetch('http://127.0.0.1:8000/parkinglot/',
-            {
-                method: 'GET',
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                },
-            });
-        if (response.status == 200){
-            //let responseJson = await response.json();
-            //return responseJson.result;
-            return JSON.parse(response._bodyInit);
-        } else return null;
-    }
-    catch (e){
-        return null;
     }
 }

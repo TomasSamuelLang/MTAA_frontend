@@ -48,8 +48,8 @@ const HomeStack = createStackNavigator({
 const SignedIn = createBottomTabNavigator(
     {
         Home: {screen: HomeStack},
-        AddParking: {screen: AddParking},
-        Profile: {screen: Profile}
+        'Add Parking': {screen: AddParking},
+        Profile: {screen: Profile},
     },
 
     {

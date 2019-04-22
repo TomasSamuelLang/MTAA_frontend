@@ -22,7 +22,7 @@ export default class AddParking extends Component{
         if (name !== '' && address !== '' && capacity !== '' && townId !== ''){
             try {
                 let token = await getToken();
-                let response = await fetch('http://127.0.0.1:8000/parkinglot/',{
+                let response = await fetch('http://192.168.0.108:8000/parkinglot/',{
                     method: 'POST',
                     headers: {
                         Accept: 'application/json',
@@ -42,7 +42,7 @@ export default class AddParking extends Component{
                     if (photo !== ''){
                         let photo_base = photo;
                         let responseJson = await response.json();
-                        fetch('http://127.0.0.1:8000/uploadphoto/',{
+                        fetch('http://192.168.0.108:8000/uploadphoto/',{
                             method: 'PUT',
                             headers: {
                                 Accept: 'application/json',
@@ -91,7 +91,7 @@ export default class AddParking extends Component{
 
     async getAllTowns(){
         let tempdata = [];
-        let response = await fetch('http://127.0.0.1:8000/gettowns/',{
+        let response = await fetch('http://192.168.0.108:8000/gettowns/',{
             method: "GET",
             headers: {
                 Accept: 'application/json',

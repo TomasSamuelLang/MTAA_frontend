@@ -24,7 +24,7 @@ export default class ParkingLotDetails extends Component {
 
     fetchData = async (id) => {
         let token = await getToken();
-        let res = await fetch('http://127.0.0.1:8000/parkinglot/' + id, {
+        let res = await fetch('http://192.168.0.108:8000/parkinglot/' + id, {
             method: 'GET',
             headers: {
                 Accept: 'application/json',
@@ -44,7 +44,7 @@ export default class ParkingLotDetails extends Component {
                 name: responseJson.name, address: responseJson.address, capacity: responseJson.capacity,
                 parked: responseJson.actualparkedcars, town: responseJson.town.name, country: responseJson.town.country.name
             });
-            let response = await fetch('http://127.0.0.1:8000/getphoto/' + id,{
+            let response = await fetch('http://192.168.0.108:8000/getphoto/' + id,{
                 method: 'GET',
                 headers: {
                     Accept: 'application/json',
@@ -76,7 +76,7 @@ export default class ParkingLotDetails extends Component {
 
             if(!result.cancelled) {
                 this.setState({photo: result.base64});
-                fetch('http://127.0.0.1:8000/uploadphoto/',{
+                fetch('http://192.168.0.108:8000/uploadphoto/',{
                     method: 'PUT',
                     headers: {
                         Accept: 'application/json',
@@ -96,7 +96,7 @@ export default class ParkingLotDetails extends Component {
     onParkedLeave = async (id, park) => {
         if(this.state.parked > 0) {
             let token = await getToken();
-            const response = await fetch('http://127.0.0.1:8000/parkinglot/' + id, {
+            const response = await fetch('http://192.168.0.108:8000/parkinglot/' + id, {
                 method: 'PUT',
                 headers: {
                     Accept: 'application/json',
@@ -126,7 +126,7 @@ export default class ParkingLotDetails extends Component {
     onParked = async (id, park) => {
         if(this.state.parked < this.state.capacity) {
             let token = await getToken();
-            const response = await fetch('http://127.0.0.1:8000/parkinglot/' + id, {
+            const response = await fetch('http://192.168.0.108:8000/parkinglot/' + id, {
                 method: 'PUT',
                 headers: {
                     Accept: 'application/json',

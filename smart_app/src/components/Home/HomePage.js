@@ -13,13 +13,15 @@ export default class HomePage extends Component {
             value: '',
             token: '',
             liked: [],
+            favouriteholder: []
 
         };
-        this.arrayholder = [];
+        this.parkingholder = [];
     }
 
     fetchData = async () => {
-        let response = await fetch('http://127.0.0.1:8000/parkinglot/',
+        let user_id = await getID();
+        let response = await fetch('http://192.168.0.108:8000/parkinglot/',
             {
                 method: 'GET',
                 headers: {
@@ -34,7 +36,17 @@ export default class HomePage extends Component {
         } else if (response_status === 200){
             let responseJson = await JSON.parse(response._bodyInit);
             this.setState({data: responseJson});
-            this.arrayholder = responseJson;
+            this.parkingholder = responseJson;
+            let fav_response = await fetch('http://192.168.0.108:8000/favouriteparkinglot/' + user_id, {
+                method: 'GET',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Token ' + this.state.token
+                },
+            });
+            let favejson = await fav_response.json();
+            this.setState({favouriteholder: favejson})
         } else alert("Request failed");
     };
 
@@ -46,7 +58,7 @@ export default class HomePage extends Component {
 
     onParked = async (id, park, capacity) => {
         if(park < capacity) {
-            let resp = await fetch('http://127.0.0.1:8000/parkinglot/' + id, {
+            let resp = await fetch('http://192.168.0.108:8000/parkinglot/' + id, {
                 method: 'GET',
                 headers: {
                     Accept: 'application/json',
@@ -58,7 +70,7 @@ export default class HomePage extends Component {
             if(res_status === 200) {
                 let res_json = await resp.json();
 
-                let response = await fetch('http://127.0.0.1:8000/parkinglot/' + id, {
+                let response = await fetch('http://192.168.0.108:8000/parkinglot/' + id, {
                     method: 'PUT',
                     headers: {
                         Accept: 'application/json',
@@ -88,7 +100,7 @@ export default class HomePage extends Component {
 
     onDelete = async (id) => {
         try {
-            let response = await fetch('http://127.0.0.1:8000/parkinglot/' + id,{
+            let response = await fetch('http://192.168.0.108:8000/parkinglot/' + id,{
                 method: 'DELETE',
                 headers: {
                     Accept: 'application/json',
@@ -110,14 +122,37 @@ export default class HomePage extends Component {
         }
     };
 
+    onDislike = async (id) => {
+        try {
+            let response = await fetch('http://192.168.0.108:8000/favouriteparkinglot/' + id, {
+                method: 'DELETE',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-type': 'application/json',
+                    'Authorization': 'Token ' + this.state.token
+                },
+            });
+            let response_status = await response.status;
+            if (response_status === 204){
+                const temp = this.state.favouriteholder.filter(item => {
+                    return item.id !== id;
+                });
+                this.setState({favouriteholder: temp})
+            }
+        } catch (e) {
+
+        }
+    };
+
     onLike = async (id) => {
         try {
-            let user_id = await getID()
-            let response = await fetch('http://127.0.0.1:8000/favouriteparkinglot/' + user_id, {
+            let user_id = await getID();
+            let response = await fetch('http://192.168.0.108:8000/favouriteparkinglot/' + user_id, {
                 method: 'POST',
                 headers: {
                     Accept: 'application/json',
                     'Content-type': 'application/json',
+                    'Authorization': 'Token ' + this.state.token
                 },
                 body: JSON.stringify({
                     parkinglot: id,
@@ -125,22 +160,63 @@ export default class HomePage extends Component {
                 }),
             });
             let response_status = await response.status;
+            let responseJson = await response.json();
             if (response_status === 200){
-                alert("Liked");
-                return true;
+                const temp = this.state.favouriteholder;
+                temp.push(responseJson);
+                this.setState({favouriteholder: temp});
             }
         }
         catch (e) {
-            return false;
+
         }
     };
+
+    _renderThumb(id){
+        const result = this.state.favouriteholder.filter(item => {
+            return item.parkinglot === id;
+        });
+
+        if (result.length > 0){
+            return <TouchableOpacity style={[styles.backRightBtn, styles.backRightBtnLeft]}
+                                     onPress={() => this.onDislike(result[0].id)}>
+                <Icon
+                    name='ios-thumbs-down'
+                    type='ionicon'
+                    color='white'
+                />
+            </TouchableOpacity>
+        } else {
+            return <TouchableOpacity style={[styles.backRightBtn, styles.backRightBtnLeft]}
+                                     onPress={() => this.onLike(id)}>
+                <Icon
+                    name='ios-thumbs-up'
+                    type='ionicon'
+                    color='white'
+                />
+            </TouchableOpacity>
+        }
+    }
+
+    _renderStar(id){
+        const result = this.state.favouriteholder.filter(item => {
+            return item.parkinglot === id;
+        });
+        if (result.length > 0){
+            return <Icon
+                name='ios-star'
+                type='ionicon'
+                color='black'
+            />
+        }
+    }
 
     searchFilterFunction = text => {
         this.setState({
             value: text,
         });
 
-        const newData = this.arrayholder.filter(item => {
+        const newData = this.parkingholder.filter(item => {
             const itemData = `${item.name} ${item.address}`;
             const textData = text;
 
@@ -180,29 +256,16 @@ export default class HomePage extends Component {
                         <TouchableOpacity style={{width: 300, paddingVertical: 10}} onPress={() => navigate('DetailScreen', {id: data.item.id})}>
                             <Text style={styles.rowTextMain}>{data.item.name}</Text>
                             <Text style={styles.rowText}>{data.item.address}</Text>
-                            <Icon
-                                name='ios-star'
-                                type='ionicon'
-                                color='black'
-                            />
+                            {this._renderStar(data.item.id)}
                         </TouchableOpacity>
                     </View>
                 )}
                 renderHiddenItem={(data) => (
                     <View style={styles.rowBack}>
                         <TouchableOpacity onPress={() => this.onParked(data.item.id, data.item.actualparkedcars, data.item.capacity)}>
-                            <View>
-                                <Text style={styles.backTextBlack}>Park</Text>
-                            </View>
+                            <Text style={styles.backTextBlack}>Park</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={[styles.backRightBtn, styles.backRightBtnLeft]} onPress={() => this.onLike(data.item.id)}>
-                            <Icon
-                                reverse
-                                name='ios-thumbs-up'
-                                type='ionicon'
-                                color='blue'
-                            />
-                        </TouchableOpacity>
+                        {this._renderThumb(data.item.id)}
                         <TouchableOpacity
                             style={[styles.backRightBtn, styles.backRightBtnRight]}
                             onPress={() => Alert.alert(
