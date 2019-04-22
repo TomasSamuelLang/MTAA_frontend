@@ -5,6 +5,7 @@ import Register from "../components/Register/Register";
 import AddParking from "../components/Home/AddParking";
 import ParkingLotDetails from "../components/Home/ParkingLotDetails";
 import Profile from "../components/Home/Profile";
+import { Icon } from 'expo';
 
 const SignedOut = createStackNavigator(
     {
@@ -50,6 +51,7 @@ const SignedIn = createBottomTabNavigator(
         AddParking: {screen: AddParking},
         Profile: {screen: Profile}
     },
+
     {
         initialRouteName: 'Home',
     });

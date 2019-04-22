@@ -4,6 +4,7 @@ import getPermission from "../../utils/permissions";
 import {ImagePicker, Permissions} from "expo";
 import {getToken} from "../../auth/Auth";
 
+
 export default class ParkingLotDetails extends Component {
 
     constructor(props) {
@@ -23,7 +24,7 @@ export default class ParkingLotDetails extends Component {
 
     fetchData = async (id) => {
         let token = await getToken();
-        let res = await fetch('http://192.168.0.108:8000/parkinglot/' + id, {
+        let res = await fetch('http://127.0.0.1:8000/parkinglot/' + id, {
             method: 'GET',
             headers: {
                 Accept: 'application/json',
@@ -43,7 +44,7 @@ export default class ParkingLotDetails extends Component {
                 name: responseJson.name, address: responseJson.address, capacity: responseJson.capacity,
                 parked: responseJson.actualparkedcars, town: responseJson.town.name, country: responseJson.town.country.name
             });
-            let response = await fetch('http://192.168.0.108:8000/getphoto/' + id,{
+            let response = await fetch('http://127.0.0.1:8000/getphoto/' + id,{
                 method: 'GET',
                 headers: {
                     Accept: 'application/json',
@@ -75,7 +76,7 @@ export default class ParkingLotDetails extends Component {
 
             if(!result.cancelled) {
                 this.setState({photo: result.base64});
-                fetch('http://192.168.0.108:8000/uploadphoto/',{
+                fetch('http://127.0.0.1:8000/uploadphoto/',{
                     method: 'PUT',
                     headers: {
                         Accept: 'application/json',
@@ -89,6 +90,66 @@ export default class ParkingLotDetails extends Component {
                     }),
                 });
             }
+        }
+    };
+
+    onParkedLeave = async (id, park) => {
+        if(this.state.parked > 0) {
+            let token = await getToken();
+            const response = await fetch('http://127.0.0.1:8000/parkinglot/' + id, {
+                method: 'PUT',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Token ' + token
+                },
+                body: JSON.stringify({
+                    actualparkedcars: park - 1,
+                }),
+            });
+            let response_status = await response.status;
+            if (response_status === 200) {
+                alert("Unparked successfully");
+                let pom = park - 1;
+                this.setState({parked: pom});
+            } else if (response_status === 401) {
+                alert("Authentication credentials were not provided.");
+            } else {
+                alert("Request failed");
+            }
+        }
+        else{
+            alert("Parking lot is empty")
+        }
+    };
+
+    onParked = async (id, park) => {
+        if(this.state.parked < this.state.capacity) {
+            let token = await getToken();
+            const response = await fetch('http://127.0.0.1:8000/parkinglot/' + id, {
+                method: 'PUT',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Token ' + token
+                },
+                body: JSON.stringify({
+                    actualparkedcars: park + 1,
+                }),
+            });
+            let response_status = await response.status;
+            if (response_status === 200) {
+                alert("Parked successfully");
+                let pom = park + 1;
+                this.setState({parked: pom});
+            } else if (response_status === 401) {
+                alert("Authentication credentials were not provided.");
+            } else {
+                alert("Request failed");
+            }
+        }
+        else{
+            alert("Parking lot is full")
         }
     };
 
@@ -109,11 +170,17 @@ export default class ParkingLotDetails extends Component {
                 <View style={styles.bottom}>
                     {this.state.isLoading ? <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
                         <ActivityIndicator />
-                    </View> : <Image style={{width: null, height: 300}} source={{uri: `data:image/png;base64,${this.state.photo}`}}/>}
+                    </View> : <Image style={{width: null, height: 300 , marginHorizontal: 15}} source={{uri: `data:image/png;base64,${this.state.photo}`}}/>}
                     <TouchableOpacity style={styles.buttContainer} onPress={() => this.handleChoosePhoto()}>
                         <Text style={styles.buttText}>
                             Upload new photo
                         </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.buttContainer} onPress={() => this.onParked(this.state.id, this.state.parked)}>
+                        <Text style={styles.buttText}>Car parked</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.buttContainer} onPress={() => this.onParkedLeave(this.state.id, this.state.parked)}>
+                        <Text style={styles.buttText}>Car left</Text>
                     </TouchableOpacity>
                 </View>
             </ScrollView>
@@ -136,7 +203,11 @@ const styles = StyleSheet.create({
     },
     buttContainer: {
         backgroundColor: '#ffc107',
+        marginHorizontal: 15,
+        marginVertical: 10,
         paddingVertical: 15,
+        borderRadius: 10,
+        bottom:0,
     },
     buttText: {
         color: '#000000',

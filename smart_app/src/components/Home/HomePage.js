@@ -1,9 +1,8 @@
 import React, { Component } from 'react';
 import {View, FlatList, ActivityIndicator, TouchableOpacity, Text, StyleSheet, Alert} from 'react-native';
 import { SwipeListView } from 'react-native-swipe-list-view';
-import { SearchBar } from 'react-native-elements';
-import { Icon } from "expo";
-import {getID, getToken} from "../../auth/Auth"
+import { SearchBar, Icon } from 'react-native-elements';
+import {getID, getToken} from "../../auth/Auth";
 
 export default class HomePage extends Component {
     constructor(props) {
@@ -12,13 +11,15 @@ export default class HomePage extends Component {
             isLoading: true,
             data: [],
             value: '',
-            token: ''
+            token: '',
+            liked: [],
+
         };
         this.arrayholder = [];
     }
 
     fetchData = async () => {
-        let response = await fetch('http://192.168.0.108:8000/parkinglot/',
+        let response = await fetch('http://127.0.0.1:8000/parkinglot/',
             {
                 method: 'GET',
                 headers: {
@@ -43,35 +44,51 @@ export default class HomePage extends Component {
         this.setState({isLoading: false});
     }
 
-    onParked = async (id, park) => {
+    onParked = async (id, park, capacity) => {
+        if(park < capacity) {
+            let resp = await fetch('http://127.0.0.1:8000/parkinglot/' + id, {
+                method: 'GET',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Token ' + this.state.token
+                },
+            });
+            let res_status = await resp.status;
+            if(res_status === 200) {
+                let res_json = await resp.json();
 
-        const response = await fetch('http://192.168.0.108:8000/parkinglot/' + id,{
-            method: 'PUT',
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-                'Authorization': 'Token ' + this.state.token
-            },
-            body: JSON.stringify({
-                actualparkedcars: park + 1,
-            }),
-        });
-        let response_status = await response.status;
-        if (response_status === 200){
-            alert("Parked successfully");
-            let pom = park + 1;
-            this.setState({parked: pom});
-        } else if (response_status === 401){
-            alert("Authentication credentials were not provided.");
+                let response = await fetch('http://127.0.0.1:8000/parkinglot/' + id, {
+                    method: 'PUT',
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Token ' + this.state.token
+                    },
+                    body: JSON.stringify({
+                        actualparkedcars: res_json.actualparkedcars + 1,
+                    }),
+                });
+                let response_status = await response.status;
+                if (response_status === 200) {
+                    alert("Parked successfully");
+                    let pom = res_json.actualparkedcars + 1;
+                    this.setState({parked: pom});
+                } else if (response_status === 401) {
+                    alert("Authentication credentials were not provided.");
+                } else {
+                    alert("Request failed");
+                }
+            }
         }
-        else {
-            alert("Request failed");
+        else{
+            alert("Parking lot is full")
         }
     };
 
     onDelete = async (id) => {
         try {
-            let response = await fetch('http://192.168.0.108:8000/parkinglot/' + id,{
+            let response = await fetch('http://127.0.0.1:8000/parkinglot/' + id,{
                 method: 'DELETE',
                 headers: {
                     Accept: 'application/json',
@@ -95,8 +112,8 @@ export default class HomePage extends Component {
 
     onLike = async (id) => {
         try {
-            let user_id = await getID();
-            let response = await fetch('http://192.168.0.108:8000/favouriteparkinglot/' + user_id, {
+            let user_id = await getID()
+            let response = await fetch('http://127.0.0.1:8000/favouriteparkinglot/' + user_id, {
                 method: 'POST',
                 headers: {
                     Accept: 'application/json',
@@ -109,6 +126,7 @@ export default class HomePage extends Component {
             });
             let response_status = await response.status;
             if (response_status === 200){
+                alert("Liked");
                 return true;
             }
         }
@@ -123,7 +141,7 @@ export default class HomePage extends Component {
         });
 
         const newData = this.arrayholder.filter(item => {
-            const itemData = `${item.name} ${item.address} ${item.town}`;
+            const itemData = `${item.name} ${item.address}`;
             const textData = text;
 
             return itemData.indexOf(textData) > -1;
@@ -162,18 +180,28 @@ export default class HomePage extends Component {
                         <TouchableOpacity style={{width: 300, paddingVertical: 10}} onPress={() => navigate('DetailScreen', {id: data.item.id})}>
                             <Text style={styles.rowTextMain}>{data.item.name}</Text>
                             <Text style={styles.rowText}>{data.item.address}</Text>
+                            <Icon
+                                name='ios-star'
+                                type='ionicon'
+                                color='black'
+                            />
                         </TouchableOpacity>
                     </View>
                 )}
                 renderHiddenItem={(data) => (
                     <View style={styles.rowBack}>
-                        <TouchableOpacity onPress={() => this.onParked(data.item.id, data.item.actualparkedcars)}>
+                        <TouchableOpacity onPress={() => this.onParked(data.item.id, data.item.actualparkedcars, data.item.capacity)}>
                             <View>
                                 <Text style={styles.backTextBlack}>Park</Text>
                             </View>
                         </TouchableOpacity>
                         <TouchableOpacity style={[styles.backRightBtn, styles.backRightBtnLeft]} onPress={() => this.onLike(data.item.id)}>
-                            <Text style={styles.backTextWhite}>Like</Text>
+                            <Icon
+                                reverse
+                                name='ios-thumbs-up'
+                                type='ionicon'
+                                color='blue'
+                            />
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={[styles.backRightBtn, styles.backRightBtnRight]}
@@ -190,7 +218,12 @@ export default class HomePage extends Component {
                                 ],
                                 {cancelable: false},
                             )}>
-                            <Text style={styles.backTextWhite}>Delete</Text>
+                            <Icon
+                                reverse
+                                name='ios-trash'
+                                type='ionicon'
+                                color='red'
+                            />
                         </TouchableOpacity>
                     </View>
                 )}
