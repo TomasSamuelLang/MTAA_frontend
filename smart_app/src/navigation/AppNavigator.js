@@ -32,7 +32,7 @@ const HomeStack = createStackNavigator({
             headerStyle: {
                 backgroundColor: '#9fcdff',
             },
-            headerTransparent: true
+            headerTransparent: false
         },
         initialRouteName: 'HomeScreen',
     });

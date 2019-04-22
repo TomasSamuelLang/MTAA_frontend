@@ -6,6 +6,7 @@ export default class ParkingLotDetails extends Component {
     constructor(props) {
         super(props);
         this.state = {
+            id: '',
             text: '',
             picture: '',
             name: '',
@@ -17,35 +18,40 @@ export default class ParkingLotDetails extends Component {
         };
     }
 
-    fetchData = async () => {
-        const response = await fetch('http://127.0.0.1:8000/getphoto/2',{
-            method: 'GET',
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-            }
-        });
-        const json = await response.json();
-        this.setState({picture: json.photo});
+    fetchData = async (id) => {
+        if(id !== null) {
+            // const response = await fetch('http://192.168.100.37:8000/getphoto/' + id,{
+            //     method: 'GET',
+            //     headers: {
+            //         Accept: 'application/json',
+            //         'Content-Type': 'application/json',
+            //     }
+            // });
+            // const json = await response.json();
+            // this.setState({picture: json.photo});
 
-        const res = await fetch('http://127.0.0.1:8000/parkinglot/2', {
-            method: 'GET',
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-            }
-        });
-        const jjson = await res.json();
-        this.setState({name: jjson.name, address: jjson.address, capacity: jjson.capacity,
-            parked: jjson.actualparkedcars, town: jjson.town.name, country: jjson.town.country.name});
+            const res = await fetch('http://192.168.100.37:8000/parkinglot/' + id, {
+                method: 'GET',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                }
+            });
+            const jjson = await res.json();
+            this.setState({
+                name: jjson.name, address: jjson.address, capacity: jjson.capacity,
+                parked: jjson.actualparkedcars, town: jjson.town.name, country: jjson.town.country.name
+            });
+        }
     };
 
-    componentWillMount() {
-        this.fetchData();
-    };
+    // componentWillMount() {
+    //     //this.fetchData();
+    //
+    // };
 
-    onParked = async () => {
-        const response = await fetch('http://127.0.0.1:8000/parkinglot/2',{
+    onParked = async (id) => {
+        const response = await fetch('http://127.0.0.1:8000/parkinglot/' + id,{
             method: 'PUT',
             headers: {
                 Accept: 'application/json',
@@ -62,8 +68,8 @@ export default class ParkingLotDetails extends Component {
         }
     };
 
-    onDelete = async () => {
-        const response = await fetch('http://127.0.0.1:8000/parkinglot/2',{
+    onDelete = async (id) => {
+        const response = await fetch('http://127.0.0.1:8000/parkinglot/' + id,{
             method: 'DELETE',
             headers: {
                 Accept: 'application/json',
@@ -75,16 +81,21 @@ export default class ParkingLotDetails extends Component {
         }
     };
 
+    componentDidMount() {
+        this.setState({id: this.props.navigation.state.params.id});
+        this.fetchData(this.props.navigation.state.params.id);
+    }
+
     render() {
         const {navigate} = this.props.navigation;
         return (
             <View style={styles.container}>
-                <Text style={styles.buttonText1}>Meno: {this.state.name}</Text>
-                <Text style={styles.buttonText1}>Adresa: {this.state.address}</Text>
-                <Text style={styles.buttonText1}>Kapacita: {this.state.capacity}</Text>
-                <Text style={styles.buttonText1}>Aktualne zaparkovane auta: {this.state.parked}</Text>
-                <Text style={styles.buttonText1}>Mesto: {this.state.town}</Text>
-                <Text style={styles.buttonText1}>Krajina: {this.state.country}</Text>
+                <Text style={styles.buttonText1}>Name: {this.state.name}</Text>
+                <Text style={styles.buttonText1}>Address: {this.state.address}</Text>
+                <Text style={styles.buttonText1}>Capacity: {this.state.capacity}</Text>
+                <Text style={styles.buttonText1}>Actual parked cars: {this.state.parked}</Text>
+                <Text style={styles.buttonText1}>Town: {this.state.town}</Text>
+                <Text style={styles.buttonText1}>Country: {this.state.country}</Text>
                 <Image style={{width: 300, height: 300}} source={{uri: this.state.picture}}/>
                 <TouchableOpacity onPress={() => this.onParked()}
                                   style={styles.buttonContainer}>
