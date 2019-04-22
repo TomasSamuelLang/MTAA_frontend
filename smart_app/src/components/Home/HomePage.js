@@ -3,7 +3,7 @@ import {View, FlatList, ActivityIndicator, TouchableOpacity, Text, StyleSheet, A
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { SearchBar } from 'react-native-elements';
 import { Icon } from "expo";
-import {getID } from "../../auth/Auth"
+import {getID, getToken} from "../../auth/Auth"
 
 export default class HomePage extends Component {
     constructor(props) {
@@ -11,7 +11,8 @@ export default class HomePage extends Component {
         this.state = {
             isLoading: true,
             data: [],
-            value: ''
+            value: '',
+            token: ''
         };
         this.arrayholder = [];
     }
@@ -23,14 +24,21 @@ export default class HomePage extends Component {
                 headers: {
                     Accept: 'application/json',
                     'Content-Type': 'application/json',
+                    'Authorization': 'Token ' + this.state.token
                 },
             });
-        let responseJson = await JSON.parse(response._bodyInit);
-        this.setState({data: responseJson});
-        this.arrayholder = responseJson;
+        let response_status = await response.status;
+        if (response_status === 401){
+            alert("Authentication credentials were not provided.");
+        } else if (response_status === 200){
+            let responseJson = await JSON.parse(response._bodyInit);
+            this.setState({data: responseJson});
+            this.arrayholder = responseJson;
+        } else alert("Request failed");
     };
 
     async componentDidMount() {
+        this.setState({token: await getToken()});
         await this.fetchData();
         this.setState({isLoading: false});
     }
@@ -42,15 +50,22 @@ export default class HomePage extends Component {
             headers: {
                 Accept: 'application/json',
                 'Content-Type': 'application/json',
+                'Authorization': 'Token ' + this.state.token
             },
             body: JSON.stringify({
                 actualparkedcars: park + 1,
             }),
         });
-        if (response.status == 200){
+        let response_status = await response.status;
+        if (response_status === 200){
             alert("Parked successfully");
             let pom = park + 1;
             this.setState({parked: pom});
+        } else if (response_status === 401){
+            alert("Authentication credentials were not provided.");
+        }
+        else {
+            alert("Request failed");
         }
     };
 
@@ -61,25 +76,27 @@ export default class HomePage extends Component {
                 headers: {
                     Accept: 'application/json',
                     'Content-Type': 'application/json',
+                    'Authorization': 'Token ' + this.state.token
                 }
             });
             let response_status = await response.status;
             if (response_status === 204){
                 alert("Successfully deleted");
                 await this.fetchData();
+            } else if (response_status === 404){
+                alert("Request failed.");
+            } else if (response_status === 401){
+                alert("Authentication credentials were not provided.");
             }
-            if (response_status === 404){
-                return false;
-            }
-            return false;
         } catch (e) {
-            return false;
+            alert("Request failed.");
         }
     };
 
     onLike = async (id) => {
-        try{
-            let response = await fetch('http://192.168.0.108:8000/parkinglot/' + getID(), {
+        try {
+            let user_id = await getID();
+            let response = await fetch('http://192.168.0.108:8000/favouriteparkinglot/' + user_id, {
                 method: 'POST',
                 headers: {
                     Accept: 'application/json',
@@ -87,7 +104,7 @@ export default class HomePage extends Component {
                 },
                 body: JSON.stringify({
                     parkinglot: id,
-                    user: await getID(),
+                    user: user_id,
                 }),
             });
             let response_status = await response.status;
@@ -150,7 +167,7 @@ export default class HomePage extends Component {
                 )}
                 renderHiddenItem={(data) => (
                     <View style={styles.rowBack}>
-                        <TouchableOpacity onPress={() => this.onParked(data.item.id,data.item.actualparkedcars)}>
+                        <TouchableOpacity onPress={() => this.onParked(data.item.id, data.item.actualparkedcars)}>
                             <View>
                                 <Text style={styles.backTextBlack}>Park</Text>
                             </View>

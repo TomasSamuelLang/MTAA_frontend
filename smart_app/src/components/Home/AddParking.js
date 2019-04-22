@@ -1,7 +1,9 @@
 import React, { Component} from 'react';
-import { Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, ScrollView, Picker } from 'react-native';
-import {ImagePicker} from "expo";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet,
+    KeyboardAvoidingView, ScrollView, Picker, Image, Alert } from 'react-native';
+import {ImagePicker, Permissions} from "expo";
 import getPermission from "../../utils/permissions";
+import {getToken} from "../../auth/Auth";
 
 export default class AddParking extends Component{
     constructor(props) {
@@ -19,11 +21,13 @@ export default class AddParking extends Component{
     async addParkingLot(name, address, capacity, townId, photo) {
         if (name !== '' && address !== '' && capacity !== '' && townId !== ''){
             try {
+                let token = await getToken();
                 let response = await fetch('http://192.168.0.108:8000/parkinglot/',{
                     method: 'POST',
                     headers: {
                         Accept: 'application/json',
                         'Content-Type': 'application/json',
+                        'Authorization': 'Token ' + token
                     },
                     body: JSON.stringify({
                         name: name,
@@ -43,6 +47,7 @@ export default class AddParking extends Component{
                             headers: {
                                 Accept: 'application/json',
                                 'Content-Type': 'application/json',
+                                'Authorization': 'Token ' + token
                             },
                             body: JSON.stringify({
                                 parkinglot: responseJson.id,
@@ -61,6 +66,8 @@ export default class AddParking extends Component{
                     Alert.alert('Success', 'Parking lot successfully added.');
                 } else if (response_status === 400){
                     Alert.alert('Error', 'Request failed. Please check your input.');
+                } else if (response_status === 401){
+                    Alert.alert('Error', 'Authentication credentials were not provided.');
                 }
             } catch (e) {
                 Alert.alert('Error', 'Request failed. Please check internet connectivity.');
@@ -89,6 +96,7 @@ export default class AddParking extends Component{
             headers: {
                 Accept: 'application/json',
                 'Content-Type': 'application/json',
+                'Authorization': 'Token ' + await getToken()
             }
         });
         let responseJson = await response.json();
@@ -157,8 +165,8 @@ export default class AddParking extends Component{
                         {this.dynamic()}
                     </Picker>
 
-                    <TouchableOpacity onPress={() => {this.handleChoosePhoto()}
-                    } style={styles.photoButtContainer}>
+                    <TouchableOpacity onPress={() => {this.handleChoosePhoto()}}
+                                      style={styles.photoButtContainer}>
                         <Text style={styles.buttonText}>Choose photo of parking lot</Text>
                     </TouchableOpacity>
 

@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, ActivityIndicator} from 'react-native';
+import {View, Text, TouchableOpacity, StyleSheet, Image, ActivityIndicator, ScrollView, Alert} from 'react-native';
 import getPermission from "../../utils/permissions";
 import {ImagePicker, Permissions} from "expo";
+import {getToken} from "../../auth/Auth";
 
 export default class ParkingLotDetails extends Component {
 
@@ -21,16 +22,20 @@ export default class ParkingLotDetails extends Component {
     }
 
     fetchData = async (id) => {
+        let token = await getToken();
         let res = await fetch('http://192.168.0.108:8000/parkinglot/' + id, {
             method: 'GET',
             headers: {
                 Accept: 'application/json',
                 'Content-Type': 'application/json',
+                'Authorization': 'Token ' + token
             }
         });
         let response_status = await res.status;
         if (response_status === 404){
             alert("This parking lot does not exist.");
+        } else if (response_status === 401){
+            alert('Authentication credentials were not provided.');
         }
         else {
             let responseJson = await res.json();
@@ -43,11 +48,15 @@ export default class ParkingLotDetails extends Component {
                 headers: {
                     Accept: 'application/json',
                     'Content-Type': 'application/json',
+                    'Authorization': 'Token ' + token
                 }
             });
             let photo_response_status = await response.status;
             if (photo_response_status === 400){
                 this.setState({photo: '', isLoading: false});
+            }
+            else if (response_status === 401){
+                alert('Authentication credentials were not provided.');
             }
             else {
                 let photoJson = await response.json();
@@ -71,6 +80,7 @@ export default class ParkingLotDetails extends Component {
                     headers: {
                         Accept: 'application/json',
                         'Content-Type': 'application/json',
+                        'Authorization': 'Token ' + await getToken()
                     },
                     body: JSON.stringify({
                         parkinglot: this.state.id,
@@ -89,7 +99,7 @@ export default class ParkingLotDetails extends Component {
 
     render() {
         return (
-            <View style={styles.container}>
+            <ScrollView style={styles.container}>
                 <View style={styles.textContainer}>
                     <Text style={styles.nameText}>{this.state.name}</Text>
                     <Text style={styles.addressText}>{this.state.address}</Text>
@@ -106,7 +116,7 @@ export default class ParkingLotDetails extends Component {
                         </Text>
                     </TouchableOpacity>
                 </View>
-            </View>
+            </ScrollView>
         );
     }
 }
@@ -141,11 +151,14 @@ const styles = StyleSheet.create({
     nameText: {
         fontSize: 36,
         fontWeight: '700',
+        padding: 5
     },
     addressText: {
-        fontSize: 24
+        fontSize: 24,
+        padding: 5
     },
     localityText: {
-        fontSize: 20
+        fontSize: 20,
+        padding: 5
     }
 });
