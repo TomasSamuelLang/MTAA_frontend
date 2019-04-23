@@ -1,4 +1,4 @@
-import {storeID, storeName, storeToken } from "../../auth/Auth";
+import {storeID, storeName, storeToken, storeUser} from "../../auth/Auth";
 
 export async function registerUser(username, password) {
     try {
@@ -47,12 +47,7 @@ export async function loginUser(username, password) {
         let response_status = await response.status;
         if (response_status === 200){
             let responseJson = await response.json();
-            let user_id = responseJson.id;
-            let user_name = responseJson.username;
-            let user_token = responseJson.token;
-            storeID(user_id);
-            storeToken(user_token);
-            storeName(user_name);
+            storeUser(responseJson);
             return true;
         }
         if (response_status === 404){

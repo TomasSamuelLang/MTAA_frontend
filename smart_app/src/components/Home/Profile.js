@@ -1,6 +1,16 @@
 import React, { Component } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, KeyboardAvoidingView } from 'react-native';
-import {onSignOut, removeToken, getID, getName, removeName, removeID, getToken} from "../../auth/Auth";
+import {
+    onSignOut,
+    removeToken,
+    getID,
+    getName,
+    removeName,
+    removeID,
+    getToken,
+    removeUser,
+    getUser
+} from "../../auth/Auth";
 
 export default class Profile extends Component {
 
@@ -14,7 +24,8 @@ export default class Profile extends Component {
     }
 
     async componentDidMount() {
-        this.setState({id: await getID(), name: await getName(), token: await getToken()});
+        const user = JSON.parse(await getUser());
+        this.setState({id: user.id, name: user.username, token: user.token});
     }
 
     render(){
@@ -29,9 +40,7 @@ export default class Profile extends Component {
                 <View style={styles.bottom}>
                     <TouchableOpacity style={styles.buttonContainer}
                                       onPress={() => onSignOut()
-                                          .then(() => removeToken())
-                                          .then(() => removeID())
-                                          .then(() => removeName())
+                                          .then(() => removeUser())
                                           .then(() => navigate("SignedOut"))}>
                         <Text style={styles.buttonText}>LOG OUT</Text>
                     </TouchableOpacity>

@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet,
     KeyboardAvoidingView, ScrollView, Picker, Image, Alert } from 'react-native';
 import {ImagePicker, Permissions} from "expo";
 import getPermission from "../../utils/permissions";
-import {getToken} from "../../auth/Auth";
+import {getToken, getUser} from "../../auth/Auth";
 
 export default class AddParking extends Component{
     constructor(props) {
@@ -14,20 +14,20 @@ export default class AddParking extends Component{
             capacity: '',
             town: '',
             photo: '',
-            towns: []
+            towns: [],
+            token: '',
         };
     }
 
     async addParkingLot(name, address, capacity, townId, photo) {
         if (name !== '' && address !== '' && capacity !== '' && townId !== ''){
             try {
-                let token = await getToken();
                 let response = await fetch('http://192.168.0.108:8000/parkinglot/',{
                     method: 'POST',
                     headers: {
                         Accept: 'application/json',
                         'Content-Type': 'application/json',
-                        'Authorization': 'Token ' + token
+                        'Authorization': 'Token ' + this.state.token
                     },
                     body: JSON.stringify({
                         name: name,
@@ -39,20 +39,19 @@ export default class AddParking extends Component{
                 });
                 let response_status = await response.status;
                 if (response_status === 201){
+                    let responseJson = await response.json();
                     if (photo !== ''){
-                        let photo_base = photo;
-                        let responseJson = await response.json();
                         fetch('http://192.168.0.108:8000/uploadphoto/',{
                             method: 'PUT',
                             headers: {
                                 Accept: 'application/json',
                                 'Content-Type': 'application/json',
-                                'Authorization': 'Token ' + token
+                                'Authorization': 'Token ' + this.state.token
                             },
                             body: JSON.stringify({
                                 parkinglot: responseJson.id,
                                 photo: name,
-                                image: photo_base
+                                image: photo
                             }),
                         });
                     }
@@ -91,17 +90,19 @@ export default class AddParking extends Component{
 
     async getAllTowns(){
         let tempdata = [];
+        const user = JSON.parse(await getUser());
         let response = await fetch('http://192.168.0.108:8000/gettowns/',{
             method: "GET",
             headers: {
                 Accept: 'application/json',
                 'Content-Type': 'application/json',
-                'Authorization': 'Token ' + await getToken()
+                'Authorization': 'Token ' + user.token
             }
         });
         let responseJson = await response.json();
         tempdata = responseJson;
-        this.setState({towns: tempdata});
+
+        this.setState({towns: tempdata, token: user.token});
     }
 
     dynamic(){

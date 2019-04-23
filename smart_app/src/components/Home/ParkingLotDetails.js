@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import {View, Text, TouchableOpacity, StyleSheet, Image, ActivityIndicator, ScrollView, Alert} from 'react-native';
 import getPermission from "../../utils/permissions";
 import {ImagePicker, Permissions} from "expo";
-import {getToken} from "../../auth/Auth";
+import {getToken, getUser} from "../../auth/Auth";
 
 
 export default class ParkingLotDetails extends Component {
@@ -18,18 +18,19 @@ export default class ParkingLotDetails extends Component {
             parked: '',
             town: '',
             country: '',
+            token: '',
             isLoading: true
         };
     }
 
     fetchData = async (id) => {
-        let token = await getToken();
+        const user = JSON.parse(await getUser());
         let res = await fetch('http://192.168.0.108:8000/parkinglot/' + id, {
             method: 'GET',
             headers: {
                 Accept: 'application/json',
                 'Content-Type': 'application/json',
-                'Authorization': 'Token ' + token
+                'Authorization': 'Token ' + user.token
             }
         });
         let response_status = await res.status;
@@ -49,19 +50,19 @@ export default class ParkingLotDetails extends Component {
                 headers: {
                     Accept: 'application/json',
                     'Content-Type': 'application/json',
-                    'Authorization': 'Token ' + token
+                    'Authorization': 'Token ' + user.token
                 }
             });
             let photo_response_status = await response.status;
             if (photo_response_status === 400){
-                this.setState({photo: '', isLoading: false});
+                this.setState({photo: '', isLoading: false, token: user.token});
             }
             else if (response_status === 401){
                 alert('Authentication credentials were not provided.');
             }
             else {
                 let photoJson = await response.json();
-                this.setState({photo: photoJson.image, isLoading: false});
+                this.setState({photo: photoJson.image, isLoading: false, token: user.token});
             }
         }
     };
@@ -81,7 +82,7 @@ export default class ParkingLotDetails extends Component {
                     headers: {
                         Accept: 'application/json',
                         'Content-Type': 'application/json',
-                        'Authorization': 'Token ' + await getToken()
+                        'Authorization': 'Token ' + this.state.token
                     },
                     body: JSON.stringify({
                         parkinglot: this.state.id,
@@ -95,13 +96,12 @@ export default class ParkingLotDetails extends Component {
 
     onParkedLeave = async (id, park) => {
         if(this.state.parked > 0) {
-            let token = await getToken();
             const response = await fetch('http://192.168.0.108:8000/parkinglot/' + id, {
                 method: 'PUT',
                 headers: {
                     Accept: 'application/json',
                     'Content-Type': 'application/json',
-                    'Authorization': 'Token ' + token
+                    'Authorization': 'Token ' + this.state.token
                 },
                 body: JSON.stringify({
                     actualparkedcars: park - 1,
@@ -125,13 +125,12 @@ export default class ParkingLotDetails extends Component {
 
     onParked = async (id, park) => {
         if(this.state.parked < this.state.capacity) {
-            let token = await getToken();
             const response = await fetch('http://192.168.0.108:8000/parkinglot/' + id, {
                 method: 'PUT',
                 headers: {
                     Accept: 'application/json',
                     'Content-Type': 'application/json',
-                    'Authorization': 'Token ' + token
+                    'Authorization': 'Token ' + this.state.token
                 },
                 body: JSON.stringify({
                     actualparkedcars: park + 1,
@@ -170,7 +169,9 @@ export default class ParkingLotDetails extends Component {
                 <View style={styles.bottom}>
                     {this.state.isLoading ? <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
                         <ActivityIndicator />
-                    </View> : <Image style={{width: null, height: 300 , marginHorizontal: 15}} source={{uri: `data:image/png;base64,${this.state.photo}`}}/>}
+                    </View> : this.state.photo !== '' ?
+                        <Image style={{width: null, height: 300 , marginHorizontal: 15, paddingBottom: 5}}
+                               source={{uri: `data:image/png;base64,${this.state.photo}`}}/> : <View/>}
                     <TouchableOpacity style={styles.buttContainer} onPress={() => this.handleChoosePhoto()}>
                         <Text style={styles.buttText}>
                             Upload new photo
@@ -203,8 +204,8 @@ const styles = StyleSheet.create({
     },
     buttContainer: {
         backgroundColor: '#ffc107',
-        marginHorizontal: 15,
-        marginVertical: 10,
+        marginHorizontal: 20,
+        marginVertical: 5,
         paddingVertical: 15,
         borderRadius: 10,
         bottom:0,

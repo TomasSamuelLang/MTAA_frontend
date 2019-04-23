@@ -4,18 +4,11 @@ const USER_KEY = "MTAA_SMART_PARKING_APP";
 const USER_ID = "USER_ID";
 const USER_TOKEN = "USER_TOKEN";
 const USER_NAME = "USER_NAME";
+const USER = "USER";
 
-export const storeID = (id) => AsyncStorage.setItem(USER_ID, id.toString());
-export const getID = () => AsyncStorage.getItem(USER_ID);
-export const removeID = () => AsyncStorage.removeItem(USER_ID);
-
-export const storeToken = (token) => AsyncStorage.setItem(USER_TOKEN, token);
-export const getToken = () => AsyncStorage.getItem(USER_TOKEN);
-export const removeToken = () => AsyncStorage.removeItem(USER_TOKEN);
-
-export const storeName = (name) => AsyncStorage.setItem(USER_NAME, name);
-export const getName = () => AsyncStorage.getItem(USER_NAME);
-export const removeName = () => AsyncStorage.removeItem(USER_NAME);
+export const storeUser = (user) => AsyncStorage.setItem(USER, JSON.stringify(user));
+export const getUser = () => AsyncStorage.getItem(USER);
+export const removeUser = () => AsyncStorage.removeItem(USER);
 
 export const onSignIn = () => AsyncStorage.setItem(USER_KEY, "true");
 export const onSignOut = () => AsyncStorage.removeItem(USER_KEY);

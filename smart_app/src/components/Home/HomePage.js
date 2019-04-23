@@ -2,16 +2,18 @@ import React, { Component } from 'react';
 import {View, FlatList, ActivityIndicator, TouchableOpacity, Text, StyleSheet, Alert} from 'react-native';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { SearchBar, Icon } from 'react-native-elements';
-import {getID, getToken} from "../../auth/Auth";
+import {getUser} from "../../auth/Auth";
 
 export default class HomePage extends Component {
     constructor(props) {
         super(props);
         this.state = {
             isLoading: true,
+            fetchingData: true,
             data: [],
             value: '',
             token: '',
+            id: '',
             liked: [],
             favouriteholder: []
 
@@ -20,7 +22,7 @@ export default class HomePage extends Component {
     }
 
     fetchData = async () => {
-        let user_id = await getID();
+        this.setState({fetchingData: true});
         let response = await fetch('http://192.168.0.108:8000/parkinglot/',
             {
                 method: 'GET',
@@ -35,9 +37,9 @@ export default class HomePage extends Component {
             alert("Authentication credentials were not provided.");
         } else if (response_status === 200){
             let responseJson = await JSON.parse(response._bodyInit);
-            this.setState({data: responseJson});
+            this.setState({data: responseJson, fetchingData: false});
             this.parkingholder = responseJson;
-            let fav_response = await fetch('http://192.168.0.108:8000/favouriteparkinglot/' + user_id, {
+            let fav_response = await fetch('http://192.168.0.108:8000/favouriteparkinglot/' + this.state.id, {
                 method: 'GET',
                 headers: {
                     Accept: 'application/json',
@@ -51,7 +53,8 @@ export default class HomePage extends Component {
     };
 
     async componentDidMount() {
-        this.setState({token: await getToken()});
+        const user = JSON.parse(await getUser());
+        this.setState({token: user.token, id: user.id});
         await this.fetchData();
         this.setState({isLoading: false});
     }
@@ -146,8 +149,7 @@ export default class HomePage extends Component {
 
     onLike = async (id) => {
         try {
-            let user_id = await getID();
-            let response = await fetch('http://192.168.0.108:8000/favouriteparkinglot/' + user_id, {
+            let response = await fetch('http://192.168.0.108:8000/favouriteparkinglot/' + this.state.id, {
                 method: 'POST',
                 headers: {
                     Accept: 'application/json',
@@ -156,7 +158,7 @@ export default class HomePage extends Component {
                 },
                 body: JSON.stringify({
                     parkinglot: id,
-                    user: user_id,
+                    user: this.state.id,
                 }),
             });
             let response_status = await response.status;
@@ -218,9 +220,7 @@ export default class HomePage extends Component {
 
         const newData = this.parkingholder.filter(item => {
             const itemData = `${item.name} ${item.address}`;
-            const textData = text;
-
-            return itemData.indexOf(textData) > -1;
+            return itemData.indexOf(text) > -1;
         });
         this.setState({
             data: newData,
@@ -249,6 +249,8 @@ export default class HomePage extends Component {
             />
             <SwipeListView
                 useFlatList
+                refreshing={this.state.fetchingData}
+                onRefresh={() => this.fetchData()}
                 data={this.state.data}
                 keyExtractor={item => item.id.toString()}
                 renderItem={(data, rowMap) => (
