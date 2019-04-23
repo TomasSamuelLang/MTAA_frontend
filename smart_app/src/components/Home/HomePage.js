@@ -3,13 +3,14 @@ import {View, FlatList, ActivityIndicator, TouchableOpacity, Text, StyleSheet, A
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { SearchBar, Icon } from 'react-native-elements';
 import {getUser} from "../../auth/Auth";
+import { IP } from "../../../App";
 
 export default class HomePage extends Component {
     constructor(props) {
         super(props);
         this.state = {
             isLoading: true,
-            fetchingData: true,
+            fetchingData: false,
             data: [],
             value: '',
             token: '',
@@ -22,8 +23,7 @@ export default class HomePage extends Component {
     }
 
     fetchData = async () => {
-        this.setState({fetchingData: true});
-        let response = await fetch('http://192.168.0.108:8000/parkinglot/',
+        let response = await fetch('http://' + IP + '/parkinglot/',
             {
                 method: 'GET',
                 headers: {
@@ -34,12 +34,12 @@ export default class HomePage extends Component {
             });
         let response_status = await response.status;
         if (response_status === 401){
-            alert("Authentication credentials were not provided.");
+            Alert.alert('Error',"Authentication credentials were not provided.");
         } else if (response_status === 200){
             let responseJson = await JSON.parse(response._bodyInit);
-            this.setState({data: responseJson, fetchingData: false});
+            this.setState({data: responseJson});
             this.parkingholder = responseJson;
-            let fav_response = await fetch('http://192.168.0.108:8000/favouriteparkinglot/' + this.state.id, {
+            let fav_response = await fetch('http://' + IP + '/favouriteparkinglot/' + this.state.id, {
                 method: 'GET',
                 headers: {
                     Accept: 'application/json',
@@ -49,7 +49,7 @@ export default class HomePage extends Component {
             });
             let favejson = await fav_response.json();
             this.setState({favouriteholder: favejson})
-        } else alert("Request failed");
+        } else Alert.alert('Error',"Request failed");
     };
 
     async componentDidMount() {
@@ -61,7 +61,7 @@ export default class HomePage extends Component {
 
     onParked = async (id, park, capacity) => {
         if(park < capacity) {
-            let resp = await fetch('http://192.168.0.108:8000/parkinglot/' + id, {
+            let resp = await fetch('http://' + IP + '/parkinglot/' + id, {
                 method: 'GET',
                 headers: {
                     Accept: 'application/json',
@@ -73,7 +73,7 @@ export default class HomePage extends Component {
             if(res_status === 200) {
                 let res_json = await resp.json();
 
-                let response = await fetch('http://192.168.0.108:8000/parkinglot/' + id, {
+                let response = await fetch('http://' + IP + '/parkinglot/' + id, {
                     method: 'PUT',
                     headers: {
                         Accept: 'application/json',
@@ -86,24 +86,24 @@ export default class HomePage extends Component {
                 });
                 let response_status = await response.status;
                 if (response_status === 200) {
-                    alert("Parked successfully");
+                    Alert.alert('Success',"Parked successfully");
                     let pom = res_json.actualparkedcars + 1;
                     this.setState({parked: pom});
                 } else if (response_status === 401) {
-                    alert("Authentication credentials were not provided.");
+                    Alert.alert('Error',"Authentication credentials were not provided.");
                 } else {
-                    alert("Request failed");
+                    Alert.alert('Error',"Request failed");
                 }
             }
         }
         else{
-            alert("Parking lot is full")
+            Alert.alert('Info',"Parking lot is full");
         }
     };
 
     onDelete = async (id) => {
         try {
-            let response = await fetch('http://192.168.0.108:8000/parkinglot/' + id,{
+            let response = await fetch('http://' + IP + '/parkinglot/' + id,{
                 method: 'DELETE',
                 headers: {
                     Accept: 'application/json',
@@ -113,21 +113,21 @@ export default class HomePage extends Component {
             });
             let response_status = await response.status;
             if (response_status === 204){
-                alert("Successfully deleted");
+                Alert.alert('Success',"Successfully deleted");
                 await this.fetchData();
             } else if (response_status === 404){
-                alert("Request failed.");
+                Alert.alert('Error',"Request failed.");
             } else if (response_status === 401){
-                alert("Authentication credentials were not provided.");
+                Alert.alert('Error',"Authentication credentials were not provided.");
             }
         } catch (e) {
-            alert("Request failed.");
+            Alert.alert('Error',"Request failed.");
         }
     };
 
     onDislike = async (id) => {
         try {
-            let response = await fetch('http://192.168.0.108:8000/favouriteparkinglot/' + id, {
+            let response = await fetch('http://' + IP + '/favouriteparkinglot/' + id, {
                 method: 'DELETE',
                 headers: {
                     Accept: 'application/json',
@@ -141,15 +141,15 @@ export default class HomePage extends Component {
                     return item.id !== id;
                 });
                 this.setState({favouriteholder: temp})
-            }
+            } else Alert.alert('Error',"Request failed.");
         } catch (e) {
-
+            Alert.alert('Error',"Request failed.");
         }
     };
 
     onLike = async (id) => {
         try {
-            let response = await fetch('http://192.168.0.108:8000/favouriteparkinglot/' + this.state.id, {
+            let response = await fetch('http://' + IP + '/favouriteparkinglot/' + this.state.id, {
                 method: 'POST',
                 headers: {
                     Accept: 'application/json',
@@ -167,10 +167,10 @@ export default class HomePage extends Component {
                 const temp = this.state.favouriteholder;
                 temp.push(responseJson);
                 this.setState({favouriteholder: temp});
-            }
+            } else Alert.alert('Error',"Request failed.");
         }
         catch (e) {
-
+            Alert.alert('Error',"Request failed.");
         }
     };
 
@@ -205,11 +205,12 @@ export default class HomePage extends Component {
             return item.parkinglot === id;
         });
         if (result.length > 0){
-            return <Icon
+            return <View style={{justifyContent: 'flex-end', marginRight: 25}}>
+            <Icon
                 name='ios-star'
                 type='ionicon'
                 color='black'
-            />
+            /></View>
         }
     }
 
@@ -226,6 +227,12 @@ export default class HomePage extends Component {
             data: newData,
         });
     };
+
+    _onRefresh(){
+        this.setState({fetchingData: true});
+        this.fetchData();
+        this.setState({fetchingData: false});
+    }
 
     render() {
         const {navigate} = this.props.navigation;
@@ -250,21 +257,25 @@ export default class HomePage extends Component {
             <SwipeListView
                 useFlatList
                 refreshing={this.state.fetchingData}
-                onRefresh={() => this.fetchData()}
+                onRefresh={() => this._onRefresh()}
                 data={this.state.data}
                 keyExtractor={item => item.id.toString()}
                 renderItem={(data, rowMap) => (
-                    <View style={styles.rowFront} >
-                        <TouchableOpacity style={{width: 300, paddingVertical: 10}} onPress={() => navigate('DetailScreen', {id: data.item.id})}>
-                            <Text style={styles.rowTextMain}>{data.item.name}</Text>
-                            <Text style={styles.rowText}>{data.item.address}</Text>
+                    <View style={styles.rowFront}>
+                        <TouchableOpacity style={styles.flexing} onPress={() => navigate('DetailScreen', {id: data.item.id})}>
+                            <View style={{justifyContent: 'flex-start', marginLeft: 25}}>
+                                <Text style={styles.rowTextMain}>{data.item.name}</Text>
+                                <Text style={styles.rowText}>{data.item.address}</Text>
+                            </View>
                             {this._renderStar(data.item.id)}
                         </TouchableOpacity>
                     </View>
+
                 )}
                 renderHiddenItem={(data) => (
                     <View style={styles.rowBack}>
-                        <TouchableOpacity onPress={() => this.onParked(data.item.id, data.item.actualparkedcars, data.item.capacity)}>
+                        <TouchableOpacity style={styles.backRightBtn}
+                                          onPress={() => this.onParked(data.item.id, data.item.actualparkedcars, data.item.capacity)}>
                             <Text style={styles.backTextBlack}>Park</Text>
                         </TouchableOpacity>
                         {this._renderThumb(data.item.id)}
@@ -295,16 +306,14 @@ export default class HomePage extends Component {
                 leftOpenValue={75}
                 rightOpenValue={-150}
             />
-        </View>
-
-            );
+        </View>);
     }
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#9fcdff"
+        backgroundColor: "#9fcdff",
     },
     add: {
         fontSize: 18,
@@ -358,13 +367,17 @@ const styles = StyleSheet.create({
         textAlign: "center",
         color: "#c8d6e5"
     },
-    rowFront: {
+    flexing: {
+        flex: 1,
+        flexDirection: 'row',
         alignItems: "center",
-        backgroundColor: "#ffc107",
-        justifyContent: "center",
+        justifyContent: "space-between",
+    },
+    rowFront: {
         height: 80,
         borderBottomWidth: 1,
-        borderBottomColor: "#feca57"
+        backgroundColor: "#ffc107",
+        borderBottomColor: "#fede87"
     },
     rowTextMain: {
         color: "#222f3e",

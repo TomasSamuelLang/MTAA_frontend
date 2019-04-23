@@ -2,6 +2,8 @@ import React, { Component} from 'react';
 import { isSignedIn } from "./src/auth/Auth";
 import { createRootNavigator } from "./src/navigation/AppNavigator";
 
+export const IP = "192.168.0.108:8000";
+
 export default class App extends Component {
 
     constructor(props){

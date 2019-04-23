@@ -1,8 +1,9 @@
-import {storeID, storeName, storeToken, storeUser} from "../../auth/Auth";
+import {storeUser} from "../../auth/Auth";
+import {IP} from "../../../App";
 
 export async function registerUser(username, password) {
     try {
-        let response = await fetch('http://192.168.0.108:8000/registeruser/',
+        let response = await fetch('http://' + IP + '/registeruser/',
             {
                 method: 'POST',
                 headers: {
@@ -32,7 +33,7 @@ export async function registerUser(username, password) {
 
 export async function loginUser(username, password) {
     try {
-        let response = await fetch('http://192.168.0.108:8000/loginuser/',
+        let response = await fetch('http://' + IP + '/loginuser/',
             {
                 method: 'POST',
                 headers: {

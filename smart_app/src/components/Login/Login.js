@@ -60,7 +60,7 @@ export default class Login extends Component{
                     </TouchableOpacity>
 
                     <Text onPress={() => navigate('RegisterScreen')}
-                          style={styles.registerText}>No account yet? Register here you slut!
+                          style={styles.registerText}>No account yet? Register here!
                     </Text>
                 </View>
             </KeyboardAvoidingView>
@@ -93,7 +93,8 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         marginBottom: 10,
         padding: 10,
-        color: '#000000'
+        color: '#000000',
+        borderRadius: 10,
     },
     loginContainer: {
         alignItems: 'center',

@@ -2,8 +2,8 @@ import React, { Component } from 'react';
 import {View, Text, TouchableOpacity, StyleSheet, Image, ActivityIndicator, ScrollView, Alert} from 'react-native';
 import getPermission from "../../utils/permissions";
 import {ImagePicker, Permissions} from "expo";
-import {getToken, getUser} from "../../auth/Auth";
-
+import {getUser} from "../../auth/Auth";
+import {IP} from "../../../App";
 
 export default class ParkingLotDetails extends Component {
 
@@ -25,7 +25,7 @@ export default class ParkingLotDetails extends Component {
 
     fetchData = async (id) => {
         const user = JSON.parse(await getUser());
-        let res = await fetch('http://192.168.0.108:8000/parkinglot/' + id, {
+        let res = await fetch('http://' + IP + '/parkinglot/' + id, {
             method: 'GET',
             headers: {
                 Accept: 'application/json',
@@ -35,9 +35,9 @@ export default class ParkingLotDetails extends Component {
         });
         let response_status = await res.status;
         if (response_status === 404){
-            alert("This parking lot does not exist.");
+            Alert.alert("Error","This parking lot does not exist.");
         } else if (response_status === 401){
-            alert('Authentication credentials were not provided.');
+            Alert.alert('Error','Authentication credentials were not provided.');
         }
         else {
             let responseJson = await res.json();
@@ -45,7 +45,7 @@ export default class ParkingLotDetails extends Component {
                 name: responseJson.name, address: responseJson.address, capacity: responseJson.capacity,
                 parked: responseJson.actualparkedcars, town: responseJson.town.name, country: responseJson.town.country.name
             });
-            let response = await fetch('http://192.168.0.108:8000/getphoto/' + id,{
+            let response = await fetch('http://' + IP + '/getphoto/' + id,{
                 method: 'GET',
                 headers: {
                     Accept: 'application/json',
@@ -58,7 +58,7 @@ export default class ParkingLotDetails extends Component {
                 this.setState({photo: '', isLoading: false, token: user.token});
             }
             else if (response_status === 401){
-                alert('Authentication credentials were not provided.');
+                Alert.alert('Error','Authentication credentials were not provided.');
             }
             else {
                 let photoJson = await response.json();
@@ -77,7 +77,7 @@ export default class ParkingLotDetails extends Component {
 
             if(!result.cancelled) {
                 this.setState({photo: result.base64});
-                fetch('http://192.168.0.108:8000/uploadphoto/',{
+                fetch('http://' + IP + '/uploadphoto/',{
                     method: 'PUT',
                     headers: {
                         Accept: 'application/json',
@@ -96,7 +96,7 @@ export default class ParkingLotDetails extends Component {
 
     onParkedLeave = async (id, park) => {
         if(this.state.parked > 0) {
-            const response = await fetch('http://192.168.0.108:8000/parkinglot/' + id, {
+            const response = await fetch('http://' + IP + '/parkinglot/' + id, {
                 method: 'PUT',
                 headers: {
                     Accept: 'application/json',
@@ -109,23 +109,23 @@ export default class ParkingLotDetails extends Component {
             });
             let response_status = await response.status;
             if (response_status === 200) {
-                alert("Unparked successfully");
+                Alert.alert('Success',"Unparked successfully");
                 let pom = park - 1;
                 this.setState({parked: pom});
             } else if (response_status === 401) {
-                alert("Authentication credentials were not provided.");
+                Alert.alert('Error',"Authentication credentials were not provided.");
             } else {
-                alert("Request failed");
+                Alert.alert('Error',"Request failed");
             }
         }
         else{
-            alert("Parking lot is empty")
+            Alert.alert('Info',"Parking lot is empty");
         }
     };
 
     onParked = async (id, park) => {
         if(this.state.parked < this.state.capacity) {
-            const response = await fetch('http://192.168.0.108:8000/parkinglot/' + id, {
+            const response = await fetch('http://' + IP + '/parkinglot/' + id, {
                 method: 'PUT',
                 headers: {
                     Accept: 'application/json',
@@ -138,17 +138,17 @@ export default class ParkingLotDetails extends Component {
             });
             let response_status = await response.status;
             if (response_status === 200) {
-                alert("Parked successfully");
+                Alert.alert('Success',"Parked successfully");
                 let pom = park + 1;
                 this.setState({parked: pom});
             } else if (response_status === 401) {
-                alert("Authentication credentials were not provided.");
+                Alert.alert('Error',"Authentication credentials were not provided.");
             } else {
-                alert("Request failed");
+                Alert.alert('Error',"Request failed");
             }
         }
         else{
-            alert("Parking lot is full")
+            Alert.alert('Info',"Parking lot is full");
         }
     };
 

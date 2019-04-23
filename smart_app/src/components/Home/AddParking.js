@@ -3,7 +3,8 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet,
     KeyboardAvoidingView, ScrollView, Picker, Image, Alert } from 'react-native';
 import {ImagePicker, Permissions} from "expo";
 import getPermission from "../../utils/permissions";
-import {getToken, getUser} from "../../auth/Auth";
+import {getUser} from "../../auth/Auth";
+import {IP} from "../../../App";
 
 export default class AddParking extends Component{
     constructor(props) {
@@ -22,7 +23,7 @@ export default class AddParking extends Component{
     async addParkingLot(name, address, capacity, townId, photo) {
         if (name !== '' && address !== '' && capacity !== '' && townId !== ''){
             try {
-                let response = await fetch('http://192.168.0.108:8000/parkinglot/',{
+                let response = await fetch('http://' + IP + '/parkinglot/',{
                     method: 'POST',
                     headers: {
                         Accept: 'application/json',
@@ -41,7 +42,7 @@ export default class AddParking extends Component{
                 if (response_status === 201){
                     let responseJson = await response.json();
                     if (photo !== ''){
-                        fetch('http://192.168.0.108:8000/uploadphoto/',{
+                        fetch('http://' + IP + '/uploadphoto/',{
                             method: 'PUT',
                             headers: {
                                 Accept: 'application/json',
@@ -91,7 +92,7 @@ export default class AddParking extends Component{
     async getAllTowns(){
         let tempdata = [];
         const user = JSON.parse(await getUser());
-        let response = await fetch('http://192.168.0.108:8000/gettowns/',{
+        let response = await fetch('http://' + IP + '/gettowns/',{
             method: "GET",
             headers: {
                 Accept: 'application/json',
@@ -101,7 +102,6 @@ export default class AddParking extends Component{
         });
         let responseJson = await response.json();
         tempdata = responseJson;
-
         this.setState({towns: tempdata, token: user.token});
     }
 
@@ -165,7 +165,9 @@ export default class AddParking extends Component{
                         onValueChange={(itemValue, itemIndex) => this.setState({town: itemValue})}>
                         {this.dynamic()}
                     </Picker>
-
+                    {this.state.photo !== '' ?
+                        <Image style={{width: null, height: 250 , paddingBottom: 5}}
+                               source={{uri: `data:image/png;base64,${this.state.photo}`}}/> : <View/>}
                     <TouchableOpacity onPress={() => {this.handleChoosePhoto()}}
                                       style={styles.photoButtContainer}>
                         <Text style={styles.buttonText}>Choose photo of parking lot</Text>
@@ -176,6 +178,7 @@ export default class AddParking extends Component{
                     }} style={styles.submitButtContainer}>
                         <Text style={styles.buttonText}>Submit</Text>
                     </TouchableOpacity>
+                    <View style={{height: 50}}/>
                 </ScrollView>
             </KeyboardAvoidingView>
         );
@@ -196,6 +199,7 @@ const styles = StyleSheet.create({
     photoButtContainer: {
         backgroundColor: '#ffc107',
         paddingVertical: 15,
+        marginTop: 10,
         marginBottom: 10,
         borderRadius: 10,
     },
@@ -218,7 +222,8 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         marginBottom: 10,
         padding: 10,
-        color: '#000000'
+        color: '#000000',
+        borderRadius: 10,
     },
     homeContainer: {
         alignItems: 'center',
