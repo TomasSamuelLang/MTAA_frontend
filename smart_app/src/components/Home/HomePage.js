@@ -274,7 +274,7 @@ export default class HomePage extends Component {
                 )}
                 renderHiddenItem={(data) => (
                     <View style={styles.rowBack}>
-                        <TouchableOpacity style={styles.backRightBtn}
+                        <TouchableOpacity style={[styles.backRightBtn, styles.yellowCock]}
                                           onPress={() => this.onParked(data.item.id, data.item.actualparkedcars, data.item.capacity)}>
                             <Text style={styles.backTextBlack}>Park</Text>
                         </TouchableOpacity>
@@ -376,8 +376,8 @@ const styles = StyleSheet.create({
     rowFront: {
         height: 80,
         borderBottomWidth: 1,
-        backgroundColor: "#ffc107",
-        borderBottomColor: "#fede87"
+        backgroundColor: "#fff",
+        borderBottomColor: "#6e6c65"
     },
     rowTextMain: {
         color: "#222f3e",
@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
         padding: 15,
     },
     backTextBlack:{
-        color: "#222f3e"
+        color: "#000000"
     },
     backTextWhite: {
         color: '#FFF',
@@ -440,6 +440,10 @@ const styles = StyleSheet.create({
     backRightBtnRight: {
         backgroundColor: 'red',
         right: 0,
+    },
+    yellowCock:{
+        backgroundColor: '#ffc107',
+        left: 0,
     },
     controls: {
         alignItems: 'center',

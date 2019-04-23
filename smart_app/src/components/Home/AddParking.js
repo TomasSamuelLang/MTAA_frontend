@@ -1,10 +1,11 @@
 import React, { Component} from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet,
-    KeyboardAvoidingView, ScrollView, Picker, Image, Alert } from 'react-native';
+    KeyboardAvoidingView, ScrollView, Picker, Image, Alert, PickerIOS } from 'react-native';
 import {ImagePicker, Permissions} from "expo";
 import getPermission from "../../utils/permissions";
 import {getUser} from "../../auth/Auth";
 import {IP} from "../../../App";
+import IOSPicker from 'react-native-ios-picker';
 
 export default class AddParking extends Component{
     constructor(props) {
@@ -17,6 +18,7 @@ export default class AddParking extends Component{
             photo: '',
             towns: [],
             token: '',
+            townID: '',
         };
     }
 
@@ -159,12 +161,15 @@ export default class AddParking extends Component{
                     <Text>
                         Choose town:
                     </Text>
-                    <Picker
+
+                    <IOSPicker
+                        style={styles.inputPicker}
                         selectedValue={this.state.town}
                         keyExtractor={item => item.name}
-                        onValueChange={(itemValue, itemIndex) => this.setState({town: itemValue})}>
+                        mode='modal'
+                        onValueChange={(valueData, valueIndex) => this.setState({town: this.state.towns[valueIndex].name, townID: valueData})}>
                         {this.dynamic()}
-                    </Picker>
+                    </IOSPicker>
                     {this.state.photo !== '' ?
                         <Image style={{width: null, height: 250 , paddingBottom: 5}}
                                source={{uri: `data:image/png;base64,${this.state.photo}`}}/> : <View/>}
@@ -174,7 +179,7 @@ export default class AddParking extends Component{
                     </TouchableOpacity>
 
                     <TouchableOpacity onPress={() => { this.addParkingLot(this.state.name, this.state.address,
-                        this.state.capacity, this.state.town, this.state.photo)
+                        this.state.capacity, this.state.townID, this.state.photo)
                     }} style={styles.submitButtContainer}>
                         <Text style={styles.buttonText}>Submit</Text>
                     </TouchableOpacity>
@@ -218,6 +223,15 @@ const styles = StyleSheet.create({
         fontWeight: '700'
     },
     input: {
+        height: 40,
+        backgroundColor: '#fff',
+        marginBottom: 10,
+        padding: 10,
+        color: '#000000',
+        borderRadius: 10,
+    },
+    inputPicker: {
+        marginVertical: 5,
         height: 40,
         backgroundColor: '#fff',
         marginBottom: 10,
